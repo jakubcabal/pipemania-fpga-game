@@ -1,8 +1,25 @@
--- top.vhd
--- Autori: Jakub Cabal
--- Posledni zmena: 04.12.2014
--- Popis: Hlavni top komponenta obsahujici vsechny ostatni komponenty.
-----------------------------------------------------------------------------------
+-- The MIT License (MIT)
+--
+-- Copyright (c) 2014 Jakub Cabal
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a copy
+-- of this software and associated documentation files (the "Software"), to deal
+-- in the Software without restriction, including without limitation the rights
+-- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-- copies of the Software, and to permit persons to whom the Software is
+-- furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+-- 
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.      
+--------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
@@ -18,9 +35,9 @@ entity TOP is
       RGB    : out  STD_LOGIC_VECTOR(2 downto 0); -- Signal RGB pro VGA
       H_SYNC : out  STD_LOGIC; -- Horizontalni synchronizace VGA
       V_SYNC : out  STD_LOGIC; -- Vertikalni synchronizace VGA
-
+      -- Sound output
       SOUND  : out  STD_LOGIC; -- Zvukovy vystup
-
+      -- CTRL LEDS
       WINLED : out  STD_LOGIC;
       FAILED : out  STD_LOGIC
    );
@@ -28,100 +45,102 @@ end TOP;
 
 architecture FULL of TOP is
 
-   signal sig_key_w          : STD_LOGIC;
-   signal sig_key_s          : STD_LOGIC;
-   signal sig_key_a          : STD_LOGIC;
-   signal sig_key_d          : STD_LOGIC;
-   signal sig_key_space      : STD_LOGIC;
+   -- keys signals
+   signal sig_key_w            : STD_LOGIC;
+   signal sig_key_s            : STD_LOGIC;
+   signal sig_key_a            : STD_LOGIC;
+   signal sig_key_d            : STD_LOGIC;
+   signal sig_key_space        : STD_LOGIC;
 
-   signal pix_x              : STD_LOGIC_VECTOR (9 downto 0);
-   signal pix_y              : STD_LOGIC_VECTOR (9 downto 0);
-   signal pix_x1             : STD_LOGIC_VECTOR (9 downto 0);
-   signal pix_y1             : STD_LOGIC_VECTOR (9 downto 0);
-   signal pix_x2             : STD_LOGIC_VECTOR (9 downto 0);
-   signal pix_y2             : STD_LOGIC_VECTOR (9 downto 0);
+   -- pixels signals
+   signal pix_x                : STD_LOGIC_VECTOR (9 downto 0);
+   signal pix_y                : STD_LOGIC_VECTOR (9 downto 0);
+   signal pix_x1               : STD_LOGIC_VECTOR (9 downto 0);
+   signal pix_y1               : STD_LOGIC_VECTOR (9 downto 0);
+   signal pix_x2               : STD_LOGIC_VECTOR (9 downto 0);
+   signal pix_y2               : STD_LOGIC_VECTOR (9 downto 0);
 
-   --cell ctrl signals
-   signal sig_pix_set_x      : STD_LOGIC;
-   signal sig_pix_set_y      : STD_LOGIC;
-   signal sig_komp_set_x     : STD_LOGIC;
-   signal sig_komp_set_y     : STD_LOGIC;
-   signal sig_komp_on        : STD_LOGIC;
-   signal sig_komp_out       : STD_LOGIC_VECTOR (5 downto 0);
+   -- cell ctrl signals
+   signal sig_pix_set_x        : STD_LOGIC;
+   signal sig_pix_set_y        : STD_LOGIC;
+   signal sig_komp_set_x       : STD_LOGIC;
+   signal sig_komp_set_y       : STD_LOGIC;
+   signal sig_komp_on          : STD_LOGIC;
+   signal sig_komp_out         : STD_LOGIC_VECTOR (5 downto 0);
 
    -- video signals
-   signal sig_video_on       : STD_LOGIC;
-   signal sig_hsync          : STD_LOGIC;
-   signal sig_vsync          : STD_LOGIC;
-   signal sig_hsync1         : STD_LOGIC;
-   signal sig_vsync1         : STD_LOGIC;
-   signal sig_hsync2         : STD_LOGIC;
-   signal sig_vsync2         : STD_LOGIC;
-   signal sig_rgb            : STD_LOGIC_VECTOR (2 downto 0);
+   signal sig_video_on         : STD_LOGIC;
+   signal sig_hsync            : STD_LOGIC;
+   signal sig_vsync            : STD_LOGIC;
+   signal sig_hsync1           : STD_LOGIC;
+   signal sig_vsync1           : STD_LOGIC;
+   signal sig_hsync2           : STD_LOGIC;
+   signal sig_vsync2           : STD_LOGIC;
+   signal sig_rgb              : STD_LOGIC_VECTOR (2 downto 0);
 
    -- memory signals
    signal sig_addr_cell_ctrl   : STD_LOGIC_VECTOR (7 downto 0);
    signal sig_addr_cell_ctrl_2 : STD_LOGIC_VECTOR (8 downto 0);
    signal sig_dout_cell_gen    : STD_LOGIC_VECTOR (31 downto 0);
 
-   signal sig_we_hub         : STD_LOGIC;
-   signal sig_en_hub         : STD_LOGIC;
-   signal sig_addr_hub       : STD_LOGIC_VECTOR (7 downto 0);
-   signal sig_addr_hub_2     : STD_LOGIC_VECTOR (8 downto 0);
-   signal sig_dout_hub       : STD_LOGIC_VECTOR (31 downto 0);
-   signal sig_din_hub        : STD_LOGIC_VECTOR (31 downto 0);
+   signal sig_we_hub           : STD_LOGIC;
+   signal sig_en_hub           : STD_LOGIC;
+   signal sig_addr_hub         : STD_LOGIC_VECTOR (7 downto 0);
+   signal sig_addr_hub_2       : STD_LOGIC_VECTOR (8 downto 0);
+   signal sig_dout_hub         : STD_LOGIC_VECTOR (31 downto 0);
+   signal sig_din_hub          : STD_LOGIC_VECTOR (31 downto 0);
 
    -- memory hub signals
-   signal hub_we_a           : STD_LOGIC;
-   signal hub_en_a           : STD_LOGIC;
-   signal hub_addr_a         : STD_LOGIC_VECTOR (7 downto 0);
-   signal hub_din_a          : STD_LOGIC_VECTOR (31 downto 0);
-   signal hub_dout_a         : STD_LOGIC_VECTOR (31 downto 0);
-   signal hub_ack_a          : STD_LOGIC;
+   signal hub_we_a             : STD_LOGIC;
+   signal hub_en_a             : STD_LOGIC;
+   signal hub_addr_a           : STD_LOGIC_VECTOR (7 downto 0);
+   signal hub_din_a            : STD_LOGIC_VECTOR (31 downto 0);
+   signal hub_dout_a           : STD_LOGIC_VECTOR (31 downto 0);
+   signal hub_ack_a            : STD_LOGIC;
 
-   signal hub_we_b           : STD_LOGIC;
-   signal hub_en_b           : STD_LOGIC;
-   signal hub_addr_b         : STD_LOGIC_VECTOR (7 downto 0);
-   signal hub_din_b          : STD_LOGIC_VECTOR (31 downto 0);
-   signal hub_dout_b         : STD_LOGIC_VECTOR (31 downto 0);
-   signal hub_ack_b          : STD_LOGIC;
+   signal hub_we_b             : STD_LOGIC;
+   signal hub_en_b             : STD_LOGIC;
+   signal hub_addr_b           : STD_LOGIC_VECTOR (7 downto 0);
+   signal hub_din_b            : STD_LOGIC_VECTOR (31 downto 0);
+   signal hub_dout_b           : STD_LOGIC_VECTOR (31 downto 0);
+   signal hub_ack_b            : STD_LOGIC;
 
    -- kurzor signals
-   signal sig_kurzor         : STD_LOGIC;
-   signal sig_kurzor_addr    : STD_LOGIC_VECTOR (7 downto 0);
+   signal sig_kurzor           : STD_LOGIC;
+   signal sig_kurzor_addr      : STD_LOGIC_VECTOR (7 downto 0);
 
    -- roura generator signals
-   signal sig_komp0          : STD_LOGIC_VECTOR (5 downto 0);
-   signal sig_komp1          : STD_LOGIC_VECTOR (5 downto 0);
-   signal sig_komp2          : STD_LOGIC_VECTOR (5 downto 0);
-   signal sig_komp3          : STD_LOGIC_VECTOR (5 downto 0);
-   signal sig_komp4          : STD_LOGIC_VECTOR (5 downto 0);
-   signal sig_gen_new        : STD_LOGIC;
-   signal sig_gen_five       : STD_LOGIC;
+   signal sig_komp0            : STD_LOGIC_VECTOR (5 downto 0);
+   signal sig_komp1            : STD_LOGIC_VECTOR (5 downto 0);
+   signal sig_komp2            : STD_LOGIC_VECTOR (5 downto 0);
+   signal sig_komp3            : STD_LOGIC_VECTOR (5 downto 0);
+   signal sig_komp4            : STD_LOGIC_VECTOR (5 downto 0);
+   signal sig_gen_new          : STD_LOGIC;
+   signal sig_gen_five         : STD_LOGIC;
 
    -- sounds signals
-   signal sound_place_pipe   : STD_LOGIC;
-   signal sound_cant_place   : STD_LOGIC;  
-   signal sound_win          : STD_LOGIC;
-   signal sound_lose         : STD_LOGIC;
+   signal sound_place_pipe     : STD_LOGIC;
+   signal sound_cant_place     : STD_LOGIC;  
+   signal sound_win            : STD_LOGIC;
+   signal sound_lose           : STD_LOGIC;
 
    -- game ctrl
-   signal sig_lvl1           : STD_LOGIC;
-   signal sig_lvl2           : STD_LOGIC;
-   signal sig_lvl3           : STD_LOGIC;
-   signal sig_lvl4           : STD_LOGIC;
-   signal sig_game_on        : STD_LOGIC;
-   signal sig_main_sc        : STD_LOGIC;
-   signal sig_lvl2_sc        : STD_LOGIC;
-   signal sig_lvl3_sc        : STD_LOGIC;
-   signal sig_lvl4_sc        : STD_LOGIC;
-   signal sig_win_sc         : STD_LOGIC;
-   signal sig_lose_sc        : STD_LOGIC;
-   signal sig_win            : STD_LOGIC;
-   signal sig_lose           : STD_LOGIC;
-   signal sig_load_water     : STD_LOGIC_VECTOR (7 downto 0);
-   signal rst_wtr_ctrl       : STD_LOGIC;
-   signal wtr_ctrl_start     : STD_LOGIC;
+   signal sig_lvl1             : STD_LOGIC;
+   signal sig_lvl2             : STD_LOGIC;
+   signal sig_lvl3             : STD_LOGIC;
+   signal sig_lvl4             : STD_LOGIC;
+   signal sig_game_on          : STD_LOGIC;
+   signal sig_main_sc          : STD_LOGIC;
+   signal sig_lvl2_sc          : STD_LOGIC;
+   signal sig_lvl3_sc          : STD_LOGIC;
+   signal sig_lvl4_sc          : STD_LOGIC;
+   signal sig_win_sc           : STD_LOGIC;
+   signal sig_lose_sc          : STD_LOGIC;
+   signal sig_win              : STD_LOGIC;
+   signal sig_lose             : STD_LOGIC;
+   signal sig_load_water       : STD_LOGIC_VECTOR (7 downto 0);
+   signal rst_wtr_ctrl         : STD_LOGIC;
+   signal wtr_ctrl_start       : STD_LOGIC;
 
 begin
 
@@ -150,7 +169,7 @@ begin
    -- OBVODY RIDICI VIDEO VYSTUP
    ------------------------------------------------------------------
 
-   -- VGA radic
+   -- VGA drivers
    vga_sync_1: entity work.VGA_SYNC
    port map(
       CLK      => CLK,
@@ -215,6 +234,7 @@ begin
       RGB            => sig_rgb
    );
 
+   -- RGB register
    process (CLK)
    begin
       if rising_edge(CLK) then
@@ -226,6 +246,7 @@ begin
       end if;
    end process;
 
+   -- pixels and sync shift registers
    process (CLK)
    begin
       if rising_edge(CLK) then
