@@ -1,8 +1,26 @@
--- mem_hub.vhd
--- Autori: Jakub Cabal
--- Posledni zmena: 19.11.2014
--- Popis: Tato jednotka je vpodstate rozdvojak portu pameti
-----------------------------------------------------------------------------------
+-- The MIT License (MIT)
+--
+-- Copyright (c) 2014 Jakub Cabal
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a copy
+-- of this software and associated documentation files (the "Software"), to deal
+-- in the Software without restriction, including without limitation the rights
+-- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-- copies of the Software, and to permit persons to whom the Software is
+-- furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+-- 
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.      
+--------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
@@ -26,7 +44,6 @@ entity MEM_HUB is
       DOUT_B : out  STD_LOGIC_VECTOR(31 downto 0); -- Vystupni data  
       ACK_B  : out  STD_LOGIC; -- Potvrzeni prace s portem B
       -- Output port
-      EN     : out  STD_LOGIC; -- Povoleni prace s portem pameti
       WE     : out  STD_LOGIC; -- Povoleni zapisu
       ADDR   : out  STD_LOGIC_VECTOR(7 downto 0);  -- Adresa
       DIN    : out  STD_LOGIC_VECTOR(31 downto 0); -- Vstupni data
@@ -47,21 +64,18 @@ begin
    begin
       if (EN_A = '1') then
          WE        <= WE_A;
-         EN        <= EN_A;
          ADDR      <= ADDR_A;
          DIN       <= DIN_A;
          sig_ack_a <= '1';
          sig_ack_b <= '0';
       elsif (EN_B = '1') then
          WE        <= WE_B;
-         EN        <= EN_B;
          ADDR      <= ADDR_B;
          DIN       <= DIN_B;
          sig_ack_a <= '0';
          sig_ack_b <= '1';
       else
          WE        <= '0';
-         EN        <= '0';
          ADDR      <= (others => '0');
          DIN       <= (others => '0');
          sig_ack_a <= '0';

@@ -20,29 +20,30 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.      
 --------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity TOP is
    Generic (
-      SOUND : boolean := false -- enable / disable sound
+      SOUND_ENABLE : boolean := false -- Enable / disable sound
    );
    Port (
-      CLK    : in   STD_LOGIC; -- Hlavni hodinovy signal
-      RST    : in   STD_LOGIC; -- Hlavni synchronni reset
+      CLK    : in   STD_LOGIC; -- Main CLK - 50 MHz
+      RST    : in   STD_LOGIC; -- Main RST
       -- PS2 interface
-      PS2C   : in   STD_LOGIC; -- Hodinovy signal z PS2 portu
-      PS2D   : in   STD_LOGIC; -- Seriova vstupni data z PS2 portu
+      PS2C   : in   STD_LOGIC; -- PS2 CLK
+      PS2D   : in   STD_LOGIC; -- PS2 serial data
       -- VGA interface
-      RGB    : out  STD_LOGIC_VECTOR(2 downto 0); -- Signal RGB pro VGA
-      H_SYNC : out  STD_LOGIC; -- Horizontalni synchronizace VGA
-      V_SYNC : out  STD_LOGIC; -- Vertikalni synchronizace VGA
+      RGB    : out  STD_LOGIC_VECTOR(2 downto 0); -- VGA RGB
+      H_SYNC : out  STD_LOGIC; -- VGA h-sync
+      V_SYNC : out  STD_LOGIC; -- VGA v-sync
       -- Sound output
-      SOUND  : out  STD_LOGIC; -- sound output
+      SOUND  : out  STD_LOGIC; -- Sound output
       -- CTRL LEDS
-      WINLED : out  STD_LOGIC;
-      FAILED : out  STD_LOGIC
+      WINLED : out  STD_LOGIC; -- LED game win
+      FAILED : out  STD_LOGIC  -- LED game over
    );
 end TOP;
 
@@ -87,7 +88,6 @@ architecture FULL of TOP is
    signal sig_dout_cell_gen    : STD_LOGIC_VECTOR (31 downto 0);
 
    signal sig_we_hub           : STD_LOGIC;
-   signal sig_en_hub           : STD_LOGIC;
    signal sig_addr_hub         : STD_LOGIC_VECTOR (7 downto 0);
    signal sig_addr_hub_2       : STD_LOGIC_VECTOR (8 downto 0);
    signal sig_dout_hub         : STD_LOGIC_VECTOR (31 downto 0);
@@ -151,10 +151,9 @@ begin
    FAILED <= sig_lose;
 
    ------------------------------------------------------------------
-   -- OBVODY RIDICI VSTUP Z KLAVESNICE
+   -- PS2 DRIVERS
    ------------------------------------------------------------------
 
-   -- PS2 radic
    ps2_1: entity work.PS2
    port map(
       CLK       => CLK,
@@ -169,7 +168,7 @@ begin
    );
 
    ------------------------------------------------------------------
-   -- OBVODY RIDICI VIDEO VYSTUP
+   -- VIDEO GENERATOR
    ------------------------------------------------------------------
 
    -- VGA drivers
@@ -326,13 +325,11 @@ begin
    port map(
       CLK       => CLK,
       -- Port A
-      EN_A      => sig_en_hub, -- povoluje praci s pameti - port A
       WE_A      => sig_we_hub,
       ADDR_A    => sig_addr_hub_2,
       DATAIN_A  => sig_din_hub,
       DATAOUT_A => sig_dout_hub,
       -- Port B - Pouziva ho pouze VGA radic a to poze ke cteni
-      EN_B      => '1',  -- povoluje praci s pameti - port B
       ADDR_B    => sig_addr_cell_ctrl_2,
       DATAOUT_B => sig_dout_cell_gen
    );
@@ -357,7 +354,6 @@ begin
       DOUT_B => hub_dout_b,
       ACK_B  => hub_ack_b,
       -- Port to memory
-      EN     => sig_en_hub,
       WE     => sig_we_hub,
       ADDR   => sig_addr_hub,
       DIN    => sig_din_hub,
@@ -386,7 +382,7 @@ begin
    ------------------------------------------------------------------
 
    -- enable sound
-   if SOUND = true generate
+   ENABLE_SOUND: if SOUND_ENABLE = true generate
 
       -- Generator zvuku
       sound_1: entity work.muzika
@@ -417,7 +413,7 @@ begin
    end generate;
 
    -- disable sound
-   if SOUND = false generate
+   DISABLE_SOUND: if SOUND_ENABLE = false generate
 
       SOUND <= '0';
 
