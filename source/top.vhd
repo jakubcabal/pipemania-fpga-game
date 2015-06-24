@@ -25,6 +25,9 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity TOP is
+   Generic (
+      SOUND : boolean := false -- enable / disable sound
+   );
    Port (
       CLK    : in   STD_LOGIC; -- Hlavni hodinovy signal
       RST    : in   STD_LOGIC; -- Hlavni synchronni reset
@@ -36,7 +39,7 @@ entity TOP is
       H_SYNC : out  STD_LOGIC; -- Horizontalni synchronizace VGA
       V_SYNC : out  STD_LOGIC; -- Vertikalni synchronizace VGA
       -- Sound output
-      SOUND  : out  STD_LOGIC; -- Zvukovy vystup
+      SOUND  : out  STD_LOGIC; -- sound output
       -- CTRL LEDS
       WINLED : out  STD_LOGIC;
       FAILED : out  STD_LOGIC
@@ -379,34 +382,46 @@ begin
    );
 
    ------------------------------------------------------------------
-   -- ZVUK
+   -- SOUND
    ------------------------------------------------------------------
 
-   -- Generator zvuku
-   sound_1: entity work.muzika
-   port map(
-      CLK        => CLK,
-      RST        => RST,
-      PLACE_PIPE => sound_place_pipe,
-      CANT_PLACE => sound_cant_place,
-      WIN_LEVEL  => sound_win,
-      GAME_OVER  => sound_lose,
-      MUSIC      => SOUND
-   );
+   -- enable sound
+   if SOUND = true generate
 
-   rised_sound_1: entity work.RISING_EDGE_DETECTOR
-   port map(
-      CLK    => CLK,
-      VSTUP  => sig_win,
-      VYSTUP => sound_win
-   );
+      -- Generator zvuku
+      sound_1: entity work.muzika
+      port map(
+         CLK        => CLK,
+         RST        => RST,
+         PLACE_PIPE => sound_place_pipe,
+         CANT_PLACE => sound_cant_place,
+         WIN_LEVEL  => sound_win,
+         GAME_OVER  => sound_lose,
+         MUSIC      => SOUND
+      );
 
-   rised_sound_2: entity work.RISING_EDGE_DETECTOR
-   port map(
-      CLK    => CLK,
-      VSTUP  => sig_lose,
-      VYSTUP => sound_lose
-   );
+      rised_sound_1: entity work.RISING_EDGE_DETECTOR
+      port map(
+         CLK    => CLK,
+         VSTUP  => sig_win,
+         VYSTUP => sound_win
+      );
+
+      rised_sound_2: entity work.RISING_EDGE_DETECTOR
+      port map(
+         CLK    => CLK,
+         VSTUP  => sig_lose,
+         VYSTUP => sound_lose
+      );
+
+   end generate;
+
+   -- disable sound
+   if SOUND = false generate
+
+      SOUND <= '0';
+
+   end generate;
 
    ------------------------------------------------------------------
    -- GAME CTRL
