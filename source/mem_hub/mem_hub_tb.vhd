@@ -1,7 +1,26 @@
--- ram_bram_2p_tb.vhd
--- Autori: Jakub Cabal
--- Posledni zmena: 20.10.2014
-----------------------------------------------------------------------------------
+-- The MIT License (MIT)
+--
+-- Copyright (c) 2014 Jakub Cabal
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a copy
+-- of this software and associated documentation files (the "Software"), to deal
+-- in the Software without restriction, including without limitation the rights
+-- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-- copies of the Software, and to permit persons to whom the Software is
+-- furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+-- 
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.      
+--------------------------------------------------------------------------------
+
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
  
@@ -10,17 +29,17 @@ END MEM_HUB_TB;
  
 ARCHITECTURE behavior OF MEM_HUB_TB IS 
 
-   --Inputs
-   signal CLK       : std_logic := '0';
-   signal RST       : std_logic := '0';
+   -- CLK and RST
+   signal CLK                : STD_LOGIC := '0';
+   signal RST                : STD_LOGIC := '0';
 
+   -- Memory signals
    signal sig_we_hub         : STD_LOGIC;
-   signal sig_en_hub         : STD_LOGIC;
    signal sig_addr_hub       : STD_LOGIC_VECTOR (8 downto 0);
    signal sig_dout_hub       : STD_LOGIC_VECTOR (31 downto 0);
    signal sig_din_hub        : STD_LOGIC_VECTOR (31 downto 0);
 
-   -- memory hub signals
+   -- MEM_HUB signals
    signal hub_we_a           : STD_LOGIC;
    signal hub_en_a           : STD_LOGIC;
    signal hub_addr_a         : STD_LOGIC_VECTOR (8 downto 0);
@@ -60,7 +79,6 @@ BEGIN
       DOUT_B => hub_dout_b,
       ACK_B  => hub_ack_b,
       -- Port to memory
-      EN     => sig_en_hub,
       WE     => sig_we_hub,
       ADDR   => sig_addr_hub,
       DIN    => sig_din_hub,
@@ -74,12 +92,10 @@ BEGIN
       -- Port A
       CLK       => CLK,
       WE_A      => sig_we_hub,
-		EN_A      => sig_en_hub,
       ADDR_A    => sig_addr_hub,
       DATAIN_A  => sig_din_hub,
       DATAOUT_A => sig_dout_hub,
       -- Port B
-      EN_B      => '0',
       ADDR_B    => "000000000",
       DATAOUT_B => open
    );
