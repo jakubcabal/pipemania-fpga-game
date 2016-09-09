@@ -1,0 +1,37 @@
+#-------------------------------------------------------------------------------
+# PROJECT: PIPE MANIA - GAME FOR FPGA
+#-------------------------------------------------------------------------------
+# NAME:    CONSTRAINTS FOR EP4CE6 STARTER BOARD
+# AUTHORS: Jakub Cabal <xcabal05@stud.feec.vutbr.cz>
+# LICENSE: The MIT License, please read LICENSE file
+# WEBSITE: https://github.com/jakubcabal/pipemania-fpga-game
+#-------------------------------------------------------------------------------
+
+# GLOBAL CONSTRAINTS FOR EP4CE6 STARTER BOARD
+
+set_global_assignment -name FAMILY "Cyclone IV"
+set_global_assignment -name DEVICE EP4CE6E22C8
+set_global_assignment -name TOP_LEVEL_ENTITY TOP
+
+# FPGA PINS ASSIGNMENT
+
+set_location_assignment PIN_91  -to CLK
+set_location_assignment PIN_25  -to ASYNC_RST
+
+set_location_assignment PIN_88  -to PS2_CLK
+set_location_assignment PIN_119 -to PS2_DATA
+
+set_location_assignment PIN_120 -to VGA_RED[0]
+set_location_assignment PIN_121 -to VGA_RED[1]
+set_location_assignment PIN_124 -to VGA_RED[2]
+set_location_assignment PIN_125 -to VGA_GREEN[0]
+set_location_assignment PIN_126 -to VGA_GREEN[1]
+set_location_assignment PIN_127 -to VGA_GREEN[2]
+set_location_assignment PIN_128 -to VGA_BLUE[0]
+set_location_assignment PIN_129 -to VGA_BLUE[1]
+set_location_assignment PIN_132 -to VGA_V_SYNC
+set_location_assignment PIN_133 -to VGA_H_SYNC
+
+set_location_assignment PIN_7   -to LED_GWIN
+set_location_assignment PIN_3   -to LED_GOVER
+set_location_assignment PIN_106 -to SOUND
