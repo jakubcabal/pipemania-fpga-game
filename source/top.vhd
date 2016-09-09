@@ -8,31 +8,37 @@
 --------------------------------------------------------------------------------
 
 library IEEE;
-use IEEE.std_logic_1164.ALL;
+use IEEE.STD_LOGIC_1164.ALL;
 
 entity TOP is
-    Generic(
+    Generic (
         SOUND_ENABLE : boolean := false -- Enable / disable sound
     );
-    Port(
-        CLK    : in  std_logic; -- Main CLK - 50 MHz
-        RST    : in  std_logic; -- Main RST
-        -- PS2 interface
-        PS2C   : in  std_logic; -- PS2 CLK
-        PS2D   : in  std_logic; -- PS2 serial data
-        -- VGA interface
-        RGB    : out std_logic_vector(2 downto 0); -- VGA RGB
-        H_SYNC : out std_logic; -- VGA h-sync
-        V_SYNC : out std_logic; -- VGA v-sync
-        -- Sound output
-        SOUND  : out std_logic; -- Sound output
+    Port (
+        CLK        : in  std_logic; -- Clock - 50 MHz
+        ASYNC_RST  : in  std_logic; -- High active asynchronous reset
+        -- PS2 INTERFACE
+        PS2_CLK    : in  std_logic; -- PS2 CLK
+        PS2_DATA   : in  std_logic; -- PS2 DATA
+        -- VGA INTERFACE
+        VGA_RED    : out std_logic_vector(2 downto 0); -- VGA RED
+        VGA_GREEN  : out std_logic_vector(2 downto 0); -- VGA GREEN
+        VGA_BLUE   : out std_logic_vector(1 downto 0); -- VGA BLUE
+        VGA_H_SYNC : out std_logic; -- VGA H-SYNC
+        VGA_V_SYNC : out std_logic; -- VGA V-SYNC
+        -- SOUND OUTPUT
+        SOUND      : out std_logic; -- Sound output
         -- CTRL LEDS
-        WINLED : out std_logic; -- LED game win
-        FAILED : out std_logic  -- LED game over
+        LED_GWIN   : out std_logic; -- LED GAME WIN
+        LED_GOVER  : out std_logic  -- LED GAME OVER
     );
 end TOP;
 
 architecture FULL of TOP is
+
+    -- reset signals
+    signal async_rst_deb        : std_logic;
+    signal reset                : std_logic;
 
     -- keys signals
     signal sig_key_w            : std_logic;
@@ -65,7 +71,10 @@ architecture FULL of TOP is
     signal sig_vsync1           : std_logic;
     signal sig_hsync2           : std_logic;
     signal sig_vsync2           : std_logic;
+    signal sig_hsync3           : std_logic;
+    signal sig_vsync3           : std_logic;
     signal sig_rgb              : std_logic_vector(2 downto 0);
+    signal sig_rgb2             : std_logic_vector(2 downto 0);
 
     -- memory signals
     signal sig_addr_cell_ctrl   : std_logic_vector(7 downto 0);
@@ -132,19 +141,45 @@ architecture FULL of TOP is
 
 begin
 
-    WINLED <= sig_win;
-    FAILED <= sig_lose;
+    LED_GWIN  <= sig_win;
+    LED_GOVER <= sig_lose;
+
+    VGA_RED   <= sig_rgb2(2) & sig_rgb2(2) & sig_rgb2(2);
+    VGA_GREEN <= sig_rgb2(1) & sig_rgb2(1) & sig_rgb2(1);
+    VGA_BLUE  <= sig_rgb2(0) & sig_rgb2(0);
+
+    VGA_V_SYNC <= sig_vsync3;
+    VGA_H_SYNC <= sig_hsync3;
 
     ----------------------------------------------------------------------------
-    -- PS2 DRIVERS
+    -- RESET DEBOUNCER AND SYNCHRONIZER
+    ----------------------------------------------------------------------------
+
+    async_rst_debouncer_i: entity work.DEBOUNCER
+    port map(
+        CLK  => CLK,
+        RST  => '0',
+        DIN  => ASYNC_RST,
+        DOUT => async_rst_deb -- Debounced Asynchronous Reset
+    );
+
+    reset_sync_i: entity work.RESET_SYNC
+    port map(
+        CLK       => CLK,
+        ASYNC_RST => async_rst_deb,
+        OUT_RST   => reset -- Synchronized Asynchronous Reset
+    );
+
+    ----------------------------------------------------------------------------
+    -- PS2 DRIVER
     ----------------------------------------------------------------------------
 
     ps2_i: entity work.PS2
     port map(
         CLK       => CLK,
-        RST       => RST,
-        PS2C      => PS2C,
-        PS2D      => PS2D,
+        RST       => reset,
+        PS2C      => PS2_CLK,
+        PS2D      => PS2_DATA,
         KEY_W     => sig_key_w,
         KEY_S     => sig_key_s,
         KEY_A     => sig_key_a,
@@ -200,7 +235,7 @@ begin
     cell_generator_i: entity work.CELL_GENERATOR
     port map(
         CLK            => CLK,
-        RST            => RST,
+        RST            => reset,
         TYP_ROURY      => sig_dout_cell_gen(3 downto 0),
         NATOCENI_ROURY => sig_dout_cell_gen(5 downto 4),
         ROURA_VODA1    => sig_dout_cell_gen(15 downto 10),
@@ -222,28 +257,28 @@ begin
     );
 
     -- RGB register
-    process (CLK)
+    vga_rgb_reg_p: process (CLK)
     begin
-        if rising_edge(CLK) then
+        if (rising_edge(CLK)) then
             if (sig_video_on = '1') then
-                RGB <= sig_rgb;
+                sig_rgb2 <= sig_rgb;
             else
-                RGB <= "000";
+                sig_rgb2 <= "000";
             end if;
         end if;
     end process;
 
     -- pixels and sync shift registers
-    process (CLK)
+    vga_shreg_p: process (CLK)
     begin
-        if rising_edge(CLK) then
+        if (rising_edge(CLK)) then
             sig_hsync1 <= sig_hsync;
             sig_hsync2 <= sig_hsync1;
-            H_SYNC     <= sig_hsync2;
+            sig_hsync3 <= sig_hsync2;
 
             sig_vsync1 <= sig_vsync;
             sig_vsync2 <= sig_vsync1;
-            V_SYNC     <= sig_vsync2;
+            sig_vsync3 <= sig_vsync2;
 
             pix_x1 <= pix_x;
             pix_x2 <= pix_x1;
@@ -260,7 +295,7 @@ begin
     kurzor_ctrl_i: entity work.KURZOR_CTRL
     port map(
         CLK         => CLK,
-        RST         => RST,
+        RST         => reset,
         KEY_W       => sig_key_w,
         KEY_S       => sig_key_s,
         KEY_A       => sig_key_a,
@@ -284,10 +319,10 @@ begin
         LVL4_SC     => sig_lvl4_sc
     );
 
-    random_decoder_fifo_i: entity work.random_decoder_fifo
+    random_decoder_fifo_i: entity work.RANDOM_DECODER_FIFO
     port map(
         CLK           => CLK,
-        RST           => RST,
+        RST           => reset,
         GENERATE_NEW  => sig_gen_new,  -- po poslani enable signalu se obevi nova komponenta
         GENERATE_FIVE => sig_gen_five, -- po poslani enable signalu se obevi 5 novych komponent
         KOMP0         => sig_komp0,
@@ -323,7 +358,7 @@ begin
     mem_hub_i: entity work.MEM_HUB
     port map(
         CLK    => CLK,
-        RST    => RST,
+        RST    => reset,
         -- Port A
         EN_A   => hub_en_a,
         WE_A   => hub_we_a,
@@ -367,10 +402,10 @@ begin
     ----------------------------------------------------------------------------
 
     enable_sound_g: if (SOUND_ENABLE = true) generate
-        sound_i: entity work.muzika
+        sound_i: entity work.MUZIKA
         port map(
             CLK        => CLK,
-            RST        => RST,
+            RST        => reset,
             PLACE_PIPE => sound_place_pipe,
             CANT_PLACE => sound_cant_place,
             WIN_LEVEL  => sound_win,
@@ -401,10 +436,10 @@ begin
     -- GAME CTRL
     ----------------------------------------------------------------------------
 
-    game_ctrl_i: entity work.game_ctrl
+    game_ctrl_i: entity work.GAME_CTRL
     port map(
         CLK     => CLK,
-        RST     => RST,
+        RST     => reset,
         WIN     => sig_win,
         LOSE    => sig_lose,
         KEY_S   => sig_key_s,
@@ -422,7 +457,7 @@ begin
         WATER   => sig_load_water
     );
 
-    rst_wtr_ctrl <= RST OR sig_win_sc OR sig_lose_sc OR sig_main_sc OR sig_lvl2_sc OR sig_lvl3_sc OR sig_lvl4_sc;
+    rst_wtr_ctrl <= reset OR sig_win_sc OR sig_lose_sc OR sig_main_sc OR sig_lvl2_sc OR sig_lvl3_sc OR sig_lvl4_sc;
     sig_game_on <= sig_lvl1 OR sig_lvl2 OR sig_lvl3 OR sig_lvl4;
 
     wtr_ctrl_start <= '1' WHEN (sig_load_water = "11111111") ELSE '0';

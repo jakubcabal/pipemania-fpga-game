@@ -11,7 +11,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 entity FALLING_EDGE_DETECTOR is
-    Port(
+    Port (
         CLK    : in  std_logic; -- Hodinovy signal
         VSTUP  : in  std_logic; -- Vstup na detekci sestupne hrany
         VYSTUP : out std_logic  -- Aktivni, pokud byla detekovana sestupna hrana

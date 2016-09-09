@@ -11,7 +11,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 entity RISING_EDGE_DETECTOR is
-    Port(
+    Port (
         CLK    : in  std_logic; -- HODINOVY SIGNAL
         VSTUP  : in  std_logic; -- VSTUP
         VYSTUP : out std_logic  -- VYSTUP

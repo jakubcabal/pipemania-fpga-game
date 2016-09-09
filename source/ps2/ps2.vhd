@@ -41,11 +41,12 @@ begin
    ----------------------------------------------------------------------
 
    -- PS2 Debouncer
-   ps2_debouncer_1: entity work.PS2_DEBOUNCER
+   ps2_debouncer_i: entity work.DEBOUNCER
    port map(
-      CLK      => CLK,
-      PS2C     => PS2C,
-      PS2C_DEB => sig_ps2c_deb
+      CLK  => CLK,
+      RST  => RST,
+      DIN  => PS2C,
+      DOUT => sig_ps2c_deb
    );
 
    -- Prijem seriovych dat z PS2
@@ -74,7 +75,7 @@ begin
    ----------------------------------------------------------------------
 
    -- Generovani signalu o zmacknute klavesy W
-   process (CLK) 
+   process (CLK)
    begin
       if (rising_edge(CLK)) then
          if (RST = '1') then
@@ -84,7 +85,7 @@ begin
          else
             sig_key_w <= '0';
          end if;
-      end if;   
+      end if;
    end process;
 
    rised1: entity work.RISING_EDGE_DETECTOR
@@ -95,7 +96,7 @@ begin
    );
 
    -- Generovani signalu o zmacknute klavesy S
-   process (CLK) 
+   process (CLK)
    begin
       if (rising_edge(CLK)) then
          if (RST = '1') then
@@ -105,7 +106,7 @@ begin
          else
             sig_key_s <= '0';
          end if;
-      end if;   
+      end if;
    end process;
 
    rised2: entity work.RISING_EDGE_DETECTOR
@@ -116,7 +117,7 @@ begin
    );
 
    -- Generovani signalu o zmacknute klavesy A
-   process (CLK) 
+   process (CLK)
    begin
       if (rising_edge(CLK)) then
          if (RST = '1') then
@@ -126,7 +127,7 @@ begin
          else
             sig_key_a <= '0';
          end if;
-      end if;   
+      end if;
    end process;
 
    rised3: entity work.RISING_EDGE_DETECTOR
@@ -137,7 +138,7 @@ begin
    );
 
    -- Generovani signalu o zmacknute klavesy D
-   process (CLK) 
+   process (CLK)
    begin
       if (rising_edge(CLK)) then
          if (RST = '1') then
@@ -147,7 +148,7 @@ begin
          else
             sig_key_d <= '0';
          end if;
-      end if;   
+      end if;
    end process;
 
    rised4: entity work.RISING_EDGE_DETECTOR
@@ -158,7 +159,7 @@ begin
    );
 
    -- Generovani signalu o zmacknute klavesy SPACE
-   process (CLK) 
+   process (CLK)
    begin
       if (rising_edge(CLK)) then
          if (RST = '1') then
@@ -168,7 +169,7 @@ begin
          else
             sig_key_space <= '0';
          end if;
-      end if;   
+      end if;
    end process;
 
    rised5: entity work.RISING_EDGE_DETECTOR
