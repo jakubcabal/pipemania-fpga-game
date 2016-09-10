@@ -337,7 +337,7 @@ begin
     ----------------------------------------------------------------------------
 
     -- BRAM pamet pro stavy policek
-    bram_i: entity work.RAM_BRAM_2P
+    bram_i: entity work.BRAM_SYNC_TDP
     generic map(
         DATA_WIDTH => 32, -- Sirka datoveho vstupu a vystupu
         ADDR_WIDTH => 9   -- Sirka adresove sbernice, urcuje take pocet polozek v pameti (2^ADDR_WIDTH)
@@ -349,8 +349,10 @@ begin
         ADDR_A    => sig_addr_hub_2,
         DATAIN_A  => sig_din_hub,
         DATAOUT_A => sig_dout_hub,
-        -- Port B - Pouziva ho pouze VGA radic a to poze ke cteni
+        -- Port B - Pouziva ho pouze VGA radic a to pouze ke cteni
+        WE_B      => '0',
         ADDR_B    => sig_addr_cell_ctrl_2,
+        DATAIN_B  => (others => '0'),
         DATAOUT_B => sig_dout_cell_gen
     );
 
