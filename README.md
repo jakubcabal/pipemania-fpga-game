@@ -9,6 +9,6 @@ Now the game was released under the MIT license and will gradually be optimized 
 
 LE (LUT+FF) | LUT | FF | Memory bits | Fmax
 :---:|:---:|:---:|:---:|:---:
- 1262 | 1165 | 530 | 60988 | 62.2 MHz
+ 1176 | 1082 | 485 | 60988 | 60.7 MHz
 
 *Synthesis was performed using Quartus Prime Lite Version 16.0 for device EP4CE6E22C8 with enable "Force use of synchronous clear".*
