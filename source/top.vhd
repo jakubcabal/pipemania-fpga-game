@@ -64,7 +64,6 @@ architecture FULL of TOP is
     signal sig_komp_out         : std_logic_vector(5 downto 0);
 
     -- video signals
-    signal sig_video_on         : std_logic;
     signal sig_hsync            : std_logic;
     signal sig_vsync            : std_logic;
     signal sig_hsync1           : std_logic;
@@ -126,13 +125,8 @@ architecture FULL of TOP is
     signal sig_lvl2             : std_logic;
     signal sig_lvl3             : std_logic;
     signal sig_lvl4             : std_logic;
+    signal sig_screen_code      : std_logic_vector(2 downto 0);
     signal sig_game_on          : std_logic;
-    signal sig_main_sc          : std_logic;
-    signal sig_lvl2_sc          : std_logic;
-    signal sig_lvl3_sc          : std_logic;
-    signal sig_lvl4_sc          : std_logic;
-    signal sig_win_sc           : std_logic;
-    signal sig_lose_sc          : std_logic;
     signal sig_win              : std_logic;
     signal sig_lose             : std_logic;
     signal sig_load_water       : std_logic_vector(7 downto 0);
@@ -144,9 +138,9 @@ begin
     LED_GWIN  <= sig_win;
     LED_GOVER <= sig_lose;
 
-    VGA_RED   <= sig_rgb2(2) & sig_rgb2(2) & sig_rgb2(2);
-    VGA_GREEN <= sig_rgb2(1) & sig_rgb2(1) & sig_rgb2(1);
-    VGA_BLUE  <= sig_rgb2(0) & sig_rgb2(0);
+    VGA_RED   <= sig_rgb(2) & sig_rgb(2) & sig_rgb(2);
+    VGA_GREEN <= sig_rgb(1) & sig_rgb(1) & sig_rgb(1);
+    VGA_BLUE  <= sig_rgb(0) & sig_rgb(0);
 
     VGA_V_SYNC <= sig_vsync3;
     VGA_H_SYNC <= sig_hsync3;
@@ -197,7 +191,7 @@ begin
         CLK      => CLK,
         PIXEL_X  => pix_x,
         PIXEL_Y  => pix_y,
-        VIDEO_ON => sig_video_on,
+        VIDEO_ON => open,
         HSYNC    => sig_hsync,
         VSYNC    => sig_vsync
     );
@@ -221,13 +215,7 @@ begin
         KOMP3       => sig_komp3,
         KOMP4       => sig_komp4,
         KOMP_OUT    => sig_komp_out,
-        MAIN_SC     => sig_main_sc,
-        GAME_SC     => sig_game_on,
-        LVL2_SC     => sig_lvl2_sc,
-        LVL3_SC     => sig_lvl3_sc,
-        LVL4_SC     => sig_lvl4_sc,
-        WIN_SC      => sig_win_sc,
-        LOSE_SC     => sig_lose_sc
+        SCREEN_CODE => sig_screen_code
     );
 
     sig_addr_cell_ctrl_2 <= '0' & sig_addr_cell_ctrl;
@@ -255,18 +243,6 @@ begin
         LOAD_WATER     => sig_load_water,
         RGB            => sig_rgb
     );
-
-    -- RGB register
-    vga_rgb_reg_p: process (CLK)
-    begin
-        if (rising_edge(CLK)) then
-            if (sig_video_on = '1') then
-                sig_rgb2 <= sig_rgb;
-            else
-                sig_rgb2 <= "000";
-            end if;
-        end if;
-    end process;
 
     -- pixels and sync shift registers
     vga_shreg_p: process (CLK)
@@ -312,11 +288,8 @@ begin
         KOMP4       => sig_komp4,
         CANT_PLACE  => sound_cant_place,
         CAN_PLACE   => sound_place_pipe,
-        GAME_ON     => sig_game_on,
-        MAIN_SC     => sig_main_sc,
-        LVL2_SC     => sig_lvl2_sc,
-        LVL3_SC     => sig_lvl3_sc,
-        LVL4_SC     => sig_lvl4_sc
+        SCREEN_CODE => sig_screen_code,
+        GAME_ON     => sig_game_on
     );
 
     random_decoder_fifo_i: entity work.RANDOM_DECODER_FIFO
@@ -440,28 +413,18 @@ begin
 
     game_ctrl_i: entity work.GAME_CTRL
     port map(
-        CLK     => CLK,
-        RST     => reset,
-        WIN     => sig_win,
-        LOSE    => sig_lose,
-        KEY_S   => sig_key_s,
-        GEN5_EN => sig_gen_five,
-        MAIN_SC => sig_main_sc,
-        WIN_SC  => sig_win_sc,
-        LOSE_SC => sig_lose_sc,
-        LVL1    => sig_lvl1,
-        LVL2_SC => sig_lvl2_sc,
-        LVL2    => sig_lvl2,
-        LVL3_SC => sig_lvl3_sc,
-        LVL3    => sig_lvl3,
-        LVL4_SC => sig_lvl4_sc,
-        LVL4    => sig_lvl4,
-        WATER   => sig_load_water
+        CLK         => CLK,
+        RST         => reset,
+        WIN         => sig_win,
+        LOSE        => sig_lose,
+        KEY_S       => sig_key_s,
+        GEN5_EN     => sig_gen_five,
+        SCREEN_CODE => sig_screen_code,
+        GAME_ON     => sig_game_on,
+        WATER       => sig_load_water
     );
 
-    rst_wtr_ctrl <= reset OR sig_win_sc OR sig_lose_sc OR sig_main_sc OR sig_lvl2_sc OR sig_lvl3_sc OR sig_lvl4_sc;
-    sig_game_on <= sig_lvl1 OR sig_lvl2 OR sig_lvl3 OR sig_lvl4;
-
-    wtr_ctrl_start <= '1' WHEN (sig_load_water = "11111111") ELSE '0';
+    rst_wtr_ctrl   <= reset or not sig_game_on;
+    wtr_ctrl_start <= '1' when (sig_load_water = "11111111") else '0';
 
 end FULL;
