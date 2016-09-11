@@ -5,6 +5,16 @@ Now the game was released under the MIT license and will gradually be optimized 
 
 ![Start Screen](docs/start_screen.JPG?raw=true)
 
+# Control game:
+
+Pipe Mania game can be controlled using the keyboard with the PS/2. The control is used only five keys:
+
+* "w" - move the cursor up
+* "s" - move the cursor down / start a game or next level
+* "a" - move the cursor left
+* "d" - move the cursor right
+* "space" - places the generated pipe
+
 # Table of resource usage summary:
 
 LE (LUT+FF) | LUT | FF | Memory bits | Fmax
