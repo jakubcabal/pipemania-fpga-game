@@ -9,7 +9,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 entity RANDOM_DECODER_FIFO is
     Port(
@@ -31,56 +31,54 @@ architecture Behavioral of RANDOM_DECODER_FIFO is
     signal generate_random_1    : std_logic;
     signal generate_random_2    : std_logic;
     signal fifo_move            : std_logic;
-    signal generate_random_five : std_logic_vector(11 downto 0);
+    signal generate_random_five : unsigned(11 downto 0);
     signal fifo_input           : std_logic_vector(3 downto 0);
-    signal komp0_sig            : std_logic_vector(5 downto 0) := (others=>'0');
-    signal komp1_sig            : std_logic_vector(5 downto 0) := (others=>'0');
-    signal komp2_sig            : std_logic_vector(5 downto 0) := (others=>'0');
-    signal komp3_sig            : std_logic_vector(5 downto 0) := (others=>'0');
-    signal komp4_sig            : std_logic_vector(5 downto 0) := (others=>'0');
-    signal komp_sig             : std_logic_vector(5 downto 0) := (others=>'0');
+    signal komp0_sig            : std_logic_vector(5 downto 0);
+    signal komp1_sig            : std_logic_vector(5 downto 0);
+    signal komp2_sig            : std_logic_vector(5 downto 0);
+    signal komp3_sig            : std_logic_vector(5 downto 0);
+    signal komp4_sig            : std_logic_vector(5 downto 0);
+    signal komp_sig             : std_logic_vector(5 downto 0);
 
 begin
 
 --------------------------------------------------------------------------------
 -- vygenerovani 5-ti nahodnych komponent za sebou
 
-    process (CLK)
+    process (CLK, RST)
     begin
-        if(rising_edge(CLK)) then
-            if (RST='1') then
-                generate_random_five <= (others=>'0');
+        if (RST = '1') then
+            generate_random_five <= (others=>'0');
+            generate_random_1    <='0';
+        elsif(rising_edge(CLK)) then
+            if (GENERATE_FIVE='1') then
+                generate_random_five <= "000000000001";
                 generate_random_1<='0';
             else
-                if (GENERATE_FIVE='1') then
-                    generate_random_five <= "000000000001";
+                if (generate_random_five=4096) then
+                    generate_random_five <= (others=>'0');
                     generate_random_1<='0';
+                elsif (generate_random_five=0) then
+                    generate_random_1<='0';
+                    generate_random_five <= (others=>'0');
+                elsif (generate_random_five=237) then
+                    generate_random_1<='1';
+                    generate_random_five <= generate_random_five + 1;
+                elsif (generate_random_five=1638) then
+                    generate_random_1<='1';
+                    generate_random_five <= generate_random_five + 1;
+                elsif (generate_random_five=2484) then
+                    generate_random_1<='1';
+                    generate_random_five <= generate_random_five + 1;
+                elsif (generate_random_five=3186) then
+                    generate_random_1<='1';
+                    generate_random_five <= generate_random_five + 1;
+                elsif (generate_random_five=4001) then
+                    generate_random_1<='1';
+                    generate_random_five <= generate_random_five + 1;
                 else
-                    if (generate_random_five=4096) then
-                        generate_random_five <= (others=>'0');
-                        generate_random_1<='0';
-                    elsif (generate_random_five=0) then
-                        generate_random_1<='0';
-                        generate_random_five <= (others=>'0');
-                    elsif (generate_random_five=237) then
-                        generate_random_1<='1';
-                        generate_random_five <= generate_random_five + 1;
-                    elsif (generate_random_five=1638) then
-                        generate_random_1<='1';
-                        generate_random_five <= generate_random_five + 1;
-                    elsif (generate_random_five=2484) then
-                        generate_random_1<='1';
-                        generate_random_five <= generate_random_five + 1;
-                    elsif (generate_random_five=3186) then
-                        generate_random_1<='1';
-                        generate_random_five <= generate_random_five + 1;
-                    elsif (generate_random_five=4001) then
-                        generate_random_1<='1';
-                        generate_random_five <= generate_random_five + 1;
-                    else
-                        generate_random_1<='0';
-                        generate_random_five <= generate_random_five + 1;
-                    end if;
+                    generate_random_1<='0';
+                    generate_random_five <= generate_random_five + 1;
                 end if;
             end if;
         end if;
@@ -89,17 +87,15 @@ begin
 --------------------------------------------------------------------------------
 -- vygenerovani 1 nahodne komponenty
 
-    process (CLK)
+    process (CLK, RST)
     begin
-        if (rising_edge(CLK)) then
-            if (RST='1') then
-                generate_random_2 <= '0';
+        if (RST = '1') then
+            generate_random_2 <= '0';
+        elsif (rising_edge(CLK)) then
+            if (GENERATE_NEW = '1') then
+                generate_random_2 <= '1';
             else
-                if (GENERATE_NEW='1') then
-                    generate_random_2 <= '1';
-                else
-                    generate_random_2 <= '0';
-                end if;
+                generate_random_2 <= '0';
             end if;
         end if;
     end process;
@@ -107,16 +103,16 @@ begin
 --------------------------------------------------------------------------------
 -- vygenerovani prirazeni nahodneho cila na KOMP0_sig a posuv ostatnich. KOPM4_sig zanika
 
-    process (CLK)
+    process (CLK, RST)
     begin
-        if (rising_edge(CLK)) then
-            if (RST='1') then
-                komp0_sig <= (others=>'0');
-                komp1_sig <= (others=>'0');
-                komp2_sig <= (others=>'0');
-                komp3_sig <= (others=>'0');
-                komp4_sig <= (others=>'0');
-            elsif (fifo_move='1') then
+        if (RST = '1') then
+            komp0_sig <= (others=>'0');
+            komp1_sig <= (others=>'0');
+            komp2_sig <= (others=>'0');
+            komp3_sig <= (others=>'0');
+            komp4_sig <= (others=>'0');
+        elsif (rising_edge(CLK)) then
+            if (fifo_move = '1') then
                 komp0_sig <= komp_sig;
                 komp1_sig <= komp0_sig;
                 komp2_sig <= komp1_sig;
@@ -125,6 +121,12 @@ begin
             end if;
         end if;
     end process;
+
+    KOMP0 <= komp0_sig;
+    KOMP1 <= komp1_sig;
+    KOMP2 <= komp2_sig;
+    KOMP3 <= komp3_sig;
+    KOMP4 <= komp4_sig;
 
 --------------------------------------------------------------------------------
 -- prepocet kombinacni logiky nahodneho cisla
@@ -146,26 +148,20 @@ begin
                 "111111" when "1111",
                 "000000" when others;
 
-    KOMP0 <= komp0_sig;
-    KOMP1 <= komp1_sig;
-    KOMP2 <= komp2_sig;
-    KOMP3 <= komp3_sig;
-    KOMP4 <= komp4_sig;
-
 --------------------------------------------------------------------------------
 -- instancovani komponenty RANDOM_GENERATOR
 
     random_generator_i: entity work.RANDOM_GENERATOR
-    generic map(
+    generic map (
         Number_of_options => 10,
-        Flip_Flops => 4
+        Flip_Flops        => 4
     )
-    port map(
-        CLK => CLK,
-        RST => RST,
+    port map (
+        CLK          => CLK,
+        RST          => RST,
         RANDOM_PULSE => generate_random,
-        RANDOM_OUT => fifo_input,
-        ENABLE_OUT => fifo_move
+        RANDOM_OUT   => fifo_input,
+        ENABLE_OUT   => fifo_move
     );
 
     generate_random <= generate_random_1 OR generate_random_2;
