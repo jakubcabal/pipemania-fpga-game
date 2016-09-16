@@ -22,3 +22,7 @@ LE (LUT+FF) | LUT | FF | Memory bits | Fmax
  1176 | 1082 | 485 | 60988 | 60.7 MHz
 
 *Synthesis was performed using Quartus Prime Lite Version 16.0 for device EP4CE6E22C8 with enable "Force use of synchronous clear".*
+
+# License:
+
+This game for FPGA is available under the MIT license (MIT). Please read [LICENSE file](LICENSE).
