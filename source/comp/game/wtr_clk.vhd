@@ -2,7 +2,7 @@
 -- PROJECT: PIPE MANIA - GAME FOR FPGA
 --------------------------------------------------------------------------------
 -- NAME:    WTR_CLK
--- AUTHORS: Ondřej Dujíček <xAAAAABB@stud.feec.vutbr.cz>
+-- AUTHORS: Ondřej Dujíček  <xdujic02@stud.feec.vutbr.cz>
 --          Vojtěch Jeřábek <xjerab17@stud.feec.vutbr.cz>
 -- LICENSE: The MIT License, please read LICENSE file
 -- WEBSITE: https://github.com/jakubcabal/pipemania-fpga-game

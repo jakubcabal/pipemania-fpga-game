@@ -1,13 +1,17 @@
--- wtr_ctrl.vhd
--- Autori: Ondrej Dujicek
--- Posledni zmena: 12.12.2014
--- Popis: Obvod pro kontrolu vody trubkach
-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- PROJECT: PIPE MANIA - GAME FOR FPGA
+--------------------------------------------------------------------------------
+-- NAME:    WTR_CTRL
+-- AUTHORS: Ondřej Dujíček  <xdujic02@stud.feec.vutbr.cz>
+-- LICENSE: The MIT License, please read LICENSE file
+-- WEBSITE: https://github.com/jakubcabal/pipemania-fpga-game
+--------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use ieee.numeric_std.all; 
+use ieee.numeric_std.all;
 use IEEE.STD_LOGIC_unsigned.ALL;
-					
+
 entity WTR_CTRL is
    Port (
 		CLK         : in  STD_LOGIC;
@@ -20,31 +24,31 @@ entity WTR_CTRL is
 		WIN_BIT     : out STD_LOGIC := '0';
 		KNLG_next   : in  STD_LOGIC;
 		START       : in  STD_LOGIC;
-		FAIL_OUT    : out STD_LOGIC				
+		FAIL_OUT    : out STD_LOGIC
 	);
 end WTR_CTRL;
 
 architecture Behavioral of WTR_CTRL is
-	
+
    -- casovac
    signal rst_clk         : STD_LOGIC;
    signal start2          : STD_LOGIC;
-   
+
    -- I/O data
    signal s_cell_in       : STD_LOGIC_VECTOR(31 downto 0) := (others=>'0');
    signal s_cell_in_next  : STD_LOGIC_VECTOR(31 downto 0) := (others=>'0');
    signal s_cell_out      : STD_LOGIC_VECTOR(31 downto 0) := (others=>'0');
    signal s_cell_out_next : STD_LOGIC_VECTOR(31 downto 0) := (others=>'0');
-   
+
    -- data o trubkach
-   signal typ_tr          : STD_LOGIC_VECTOR(3 downto 0) := (others=>'0'); -- typ trubky 
+   signal typ_tr          : STD_LOGIC_VECTOR(3 downto 0) := (others=>'0'); -- typ trubky
    signal rot_tr          : STD_LOGIC_VECTOR(1 downto 0) := (others=>'0'); -- natoèení trubky
    signal r,l,up,down     : STD_LOGIC := '0';
    signal bit_check       : STD_LOGIC_VECTOR(1 downto 0) := "00";
    signal bit_check_next  : STD_LOGIC_VECTOR(1 downto 0) := "00";
    signal cesta_vody      : STD_LOGIC_VECTOR(3 downto 0) := (others=>'0');
    signal cesta_vody_next : STD_LOGIC_VECTOR(3 downto 0) := (others=>'0');
-   
+
    -- adresy
    signal adr_x_next      : STD_LOGIC_VECTOR(3 downto 0) := (others=>'0');
    signal adr_y_next      : STD_LOGIC_VECTOR(3 downto 0) := (others=>'0');
@@ -61,11 +65,11 @@ architecture Behavioral of WTR_CTRL is
    signal adr_yn_2_next   : STD_LOGIC_VECTOR(3 downto 0); --pøedchozí adresy
    signal adr_xn_2        : STD_LOGIC_VECTOR(3 downto 0); --pøedchozí adresy
    signal adr_yn_2        : STD_LOGIC_VECTOR(3 downto 0); --pøedchozí adresy
-   
+
    -- win, lose signaly
    signal fail_bit_next   : STD_LOGIC := '0';
    signal WIN_BIT_next    : STD_LOGIC := '0';
-   
+
    -- ostatni signaly
    signal tmp1            : STD_LOGIC_VECTOR(4 downto 0) := (others=>'0'); --- counter na trubky
    signal tmp1_next       : STD_LOGIC_VECTOR(4 downto 0) := (others=>'0'); --- counter na trubky
@@ -91,7 +95,7 @@ begin
       CLOCK_DEFI => clock_defi, -- nastavuje hodnotu casovace
       ENABLE_OUT => start2
    );
-   
+
    -- rozdeleni ulozenych dat
    up       <= s_cell_in(6);
    r        <= s_cell_in(7);
@@ -110,7 +114,7 @@ begin
 -- STAVOVY AUTOMAT - THE DUJDA SYSTEM
 -----------------------------------------------------------------------------------------------------
 
-process (CLK) 
+process (CLK)
 begin
    if (rising_edge(CLK)) then
       if (RST = '1') then -- synchronni reset
@@ -143,7 +147,7 @@ begin
          adr_y         <= adr_y_next;
          knlg          <= knlg_next;
          cesta_vody    <= cesta_vody_next;
-      end if;  
+      end if;
    end if;
 end process;
 
@@ -180,7 +184,7 @@ case present_state is
 
    	if (start = '1') then
    		next_state<= m1;
-   	else 
+   	else
    		next_state<= m0;
    	end if;
 ------------------------------------------------------------
@@ -195,7 +199,7 @@ case present_state is
          RE_OUT <= '0';
          s_cell_in_next <= CELL_IN;
    		next_state <= m17;
-   	else 
+   	else
          RE_OUT <= '1';
    		next_state <= m1;
    	end if;
@@ -211,7 +215,7 @@ case present_state is
 
       if (s_adr = "00000000") then
          next_state <= m8;
-      else 
+      else
          next_state <= m16;
       end if;
 ------------------------------------------------------------
@@ -224,44 +228,44 @@ case present_state is
 
       if (l='1') then -- kontrola pripojení první trubky
          next_state<= m2;
-      else 
+      else
          next_state<= m3;
       end if;
 ------------------------------------------------------------
-   -- kontrola pripojeni druhe trubky  
+   -- kontrola pripojeni druhe trubky
    when m16=>
       fail_bit_next <= '0';
       win_bit_next  <= '0';
       RE_OUT <= '0';
       WE_OUT <= '0';
 
-      case bit_check is 
+      case bit_check is
          when "00" =>
-            if (l='1') then 
+            if (l='1') then
                next_state <= m2;
-            else 
-               next_state <= m3; 
+            else
+               next_state <= m3;
             end if;
 
          when "01" =>
-            if (r='1') then 
+            if (r='1') then
                next_state <= m2;
-            else 
-               next_state <= m3; 
+            else
+               next_state <= m3;
             end if;
 
          when "10" =>
-            if (down='1') then 
+            if (down='1') then
                next_state <= m2;
-            else 
-               next_state <= m3; 
+            else
+               next_state <= m3;
             end if;
 
-         when "11" => 
-            if (up='1') then 
+         when "11" =>
+            if (up='1') then
                next_state <= m2;
-            else 
-               next_state <= m3; 
+            else
+               next_state <= m3;
             end if;
 
          when others =>
@@ -269,25 +273,25 @@ case present_state is
       end case;
 ------------------------------------------------------------
    -- zjisteni typu trubky
-   when m2=> 
+   when m2=>
       fail_bit_next <= '0';
       win_bit_next  <= '0';
       RE_OUT <= '0';
       WE_OUT <= '0';
 
-      case typ_tr is 
+      case typ_tr is
          when "0000" =>
          next_state <= m3; -- prazdne pole
 
          when "0010" =>
          next_state <= m4; -- trubka L-ko
-          
+
          when "0001" =>
-         next_state <= m5; -- rovna trubka 
-          
+         next_state <= m5; -- rovna trubka
+
          when "0011" =>
          next_state <= m6; -- krizova trubka
-         
+
          when others =>
          next_state <= m3; -- zed nebo jine
       end case;
@@ -298,8 +302,8 @@ case present_state is
       win_bit_next  <= '0';
       RE_OUT <= '0';
       WE_OUT <= '0';
-      
-      case rot_tr is 
+
+      case rot_tr is
          when "10" => -- L = z hora do prava
             if (adr_yn_1<adr_y) then
                next_state<= m10; -- doprava
@@ -310,7 +314,7 @@ case present_state is
             end if;
 
          when "11" => -- P z prava dolu
-            if (adr_yn_1>adr_y) then      
+            if (adr_yn_1>adr_y) then
                next_state<= m10; -- doprava
                cesta_vody_next <= "1001"; -- zdola doprava
             else
@@ -319,7 +323,7 @@ case present_state is
             end if;
 
          when "00" => -- 7 z dola do leva + osetreny prvni stav
-            if (adr_yn_1>adr_y) then      
+            if (adr_yn_1>adr_y) then
                next_state<= m11; -- doleva
                cesta_vody_next <= "1010"; -- zdola doleva
             else
@@ -328,7 +332,7 @@ case present_state is
             end if;
 
          when "01" => -- d z leva nahoru
-            if (adr_yn_1<adr_y) then      
+            if (adr_yn_1<adr_y) then
                next_state<= m11; -- doleva
                cesta_vody_next <= "1100"; -- zhora doleva
             else
@@ -337,7 +341,7 @@ case present_state is
             end if;
 
          when others => -- kdyby se neco posralo
-            next_state <= m3; 
+            next_state <= m3;
       end case;
 ------------------------------------------------------------
    -- rovna trubka, zjistovani natoceni
@@ -349,14 +353,14 @@ case present_state is
 
       case rot_tr is
          when "00" =>
-            if (adr_xn_1>adr_x) then      
+            if (adr_xn_1>adr_x) then
                next_state<= m11; -- doleva
                cesta_vody_next <= "0010";
             else
                next_state<= m10; -- doprava
                cesta_vody_next <= "0001";
             end if;
-          
+
          when "01" =>
             if (adr_yn_1<adr_y) then
                next_state<= m13; -- dolu
@@ -366,7 +370,7 @@ case present_state is
                cesta_vody_next <= "0011";
             end if;
 
-         when others => 
+         when others =>
             next_state <= m3;
       end case;
 ------------------------------------------------------------
@@ -377,13 +381,13 @@ case present_state is
       RE_OUT <= '0';
       WE_OUT <= '0';
 
-      if (adr_xn_1<adr_x) then   
+      if (adr_xn_1<adr_x) then
          next_state<= m10; -- tece doprava
          cesta_vody_next <= "0001";
       elsif (adr_xn_1>adr_x) then
          next_state<= m11; -- tece doleva
          cesta_vody_next <= "0010";
-      elsif (adr_yn_1<adr_y) then   
+      elsif (adr_yn_1<adr_y) then
          next_state<= m13; -- tece dolu
          cesta_vody_next <= "0100";
       elsif (adr_yn_1>adr_y) then
@@ -393,11 +397,11 @@ case present_state is
          next_state<=m10; -- tece doprava
          cesta_vody_next <= "0001";
       else
-         next_state<=m3;   
+         next_state<=m3;
       end if;
 ------------------------------------------------------------
-   -- voda potece doprava	
-   when m10 =>		 --- ptam se do prava 
+   -- voda potece doprava
+   when m10 =>		 --- ptam se do prava
       adr_x_next<= std_logic_vector(unsigned(adr_x) + 1);
       bit_check_next<="00";
       adr_xn_1_next <= adr_x;
@@ -414,7 +418,7 @@ case present_state is
       rst_clk<='1';
 ------------------------------------------------------------
    -- voda potece doleva
-   when m11 => 	--- ptam se do leva 
+   when m11 => 	--- ptam se do leva
       adr_x_next<= std_logic_vector(unsigned(adr_x) - 1);
       bit_check_next<="01";
       adr_xn_1_next <= adr_x;
@@ -472,11 +476,11 @@ case present_state is
       WE_OUT <= '0';
 
       if (start2='1') then
-         if (tmp1="11111") then 
+         if (tmp1="11111") then
             --tmp1_next <= "00000";
             next_state <= m7;
             --now_addr_next <= s_adr; -- nastaveni adresy noveho policka
-         else         
+         else
             tmp1_next<=std_logic_vector(unsigned(tmp1)+1);
             next_state<=m19;
          end if;
@@ -505,7 +509,7 @@ case present_state is
 
    	if (KNLG_next = '1') then
    		next_state <= m18;
-   	else 
+   	else
    		next_state <= m19;
    	end if;
 
@@ -519,19 +523,19 @@ case present_state is
             tmp1_next <= "00000";
             now_addr_next <= s_adr; -- nastaveni adresy noveho policka
 
-      if ((adr_yn_1="0000")and (up='1') and (typ_tr/="0011")) then 
+      if ((adr_yn_1="0000")and (up='1') and (typ_tr/="0011")) then
          next_state<=m3;
       elsif((adr_yn_1="1100")and (down='1')and (typ_tr/="0011")) then
          next_state<=m3;
       elsif((adr_xn_1="1101")and (r='1') and (adr_yn_1/="1100")and (typ_tr/="0011")) then
          next_state<=m3;
-      elsif((adr_xn_1="1101")and (r='1') and (adr_yn_1="1100") and (typ_tr/="0011")) then -- win 
+      elsif((adr_xn_1="1101")and (r='1') and (adr_yn_1="1100") and (typ_tr/="0011")) then -- win
          next_state<=m9;
       elsif((adr_xn_1="0000")and (l='1')and(adr_yn_1/="0000") and (typ_tr/="0011")) then
          next_state<=m3;
       -- krizova --- fix
-      elsif (typ_tr="0011") then 
-         if (adr_xn_2<adr_xn_1) then   
+      elsif (typ_tr="0011") then
+         if (adr_xn_2<adr_xn_1) then
             if ((adr_xn_1="1101") and (adr_yn_1/="1100")) then
                next_state <= m3;
             elsif ((adr_xn_1="1101") and (adr_yn_1="1100")) then
@@ -541,17 +545,17 @@ case present_state is
             end if;
          elsif ((adr_xn_2>adr_xn_1) and (adr_xn_1="0000")) then
             next_state<= m3;
-         elsif ((adr_yn_2<adr_yn_1) and (adr_yn_1="1100")) then   
+         elsif ((adr_yn_2<adr_yn_1) and (adr_yn_1="1100")) then
             next_state<= m3;
          elsif ((adr_yn_2>adr_yn_1) and (adr_yn_1="0000")) then
             next_state<= m3;
          else
             next_state<=m1;
          end if;
-      else 
+      else
          next_state<=m1;
-      end if; 
-------------------------------------------------------------  
+      end if;
+------------------------------------------------------------
    -- Prohra
    when m3 =>
       fail_bit_next <= '1';
@@ -560,7 +564,7 @@ case present_state is
       WE_OUT <= '0';
 
       next_state<=m3;
-------------------------------------------------------------   
+------------------------------------------------------------
    -- Vyhra
    when m9 =>
       fail_bit_next <= '0';
@@ -569,7 +573,7 @@ case present_state is
       WE_OUT <= '0';
 
       next_state <= m9;
-------------------------------------------------------------   
+------------------------------------------------------------
    -- ostatni stavy
    when others =>
       fail_bit_next <= '0';
