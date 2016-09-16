@@ -189,9 +189,9 @@ begin
     vga_sync_i: entity work.VGA_SYNC
     port map(
         CLK      => CLK,
+        RST      => reset,
         PIXEL_X  => pix_x,
         PIXEL_Y  => pix_y,
-        VIDEO_ON => open,
         HSYNC    => sig_hsync,
         VSYNC    => sig_vsync
     );
