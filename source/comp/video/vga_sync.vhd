@@ -14,8 +14,8 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity VGA_SYNC is
     Port (
-        CLK      : in  std_logic;
-        RST      : in  std_logic;
+        CLK      : in  std_logic; -- clock, must be 50 MHz
+        RST      : in  std_logic; -- reset
         PIXEL_X  : out std_logic_vector(9 downto 0); -- cislo pixelu na radku
         PIXEL_Y  : out std_logic_vector(9 downto 0); -- cislo pixelu ve sloupci
         HSYNC    : out std_logic; -- synchronizacni pulzy pro VGA vystup
