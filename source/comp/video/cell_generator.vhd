@@ -29,6 +29,7 @@ entity CELL_GENERATOR is
         KOMP_SET_X     : in  std_logic;
         KOMP_SET_Y     : in  std_logic;
         KOMP_ON        : in  std_logic;
+        KOMP4_IS       : in  std_logic;
         KOMP_IN        : in  std_logic_vector(5 downto 0);
         GAME_ON        : in  std_logic;
         LOAD_WATER     : in  std_logic_vector(7 downto 0);
@@ -77,6 +78,21 @@ architecture FULL of CELL_GENERATOR is
     signal last_water_lenght    : unsigned(9 downto 0);
     signal roura_water_h_offset : unsigned(9 downto 0);
     signal roura_water_v_offset : unsigned(9 downto 0);
+
+    signal white_point_is_reg  : std_logic;
+
+    signal water_is            : std_logic;
+    signal water_is_reg        : std_logic;
+    signal game_field_text     : std_logic;
+    signal game_field_text_reg : std_logic;
+    signal wall_is             : std_logic;
+    signal wall_is_reg         : std_logic;
+    signal kurzor_is           : std_logic;
+    signal kurzor_is_reg       : std_logic;
+
+    signal sq_cell_on_reg      : std_logic;
+    signal rom_bit_reg         : std_logic;
+    signal komp4_is_reg        : std_logic;
 
 begin
 
@@ -304,34 +320,69 @@ begin
     -- RIZENI SIGNALU RBG
     ----------------------------------------------------------------------------
 
+    process (CLK)
+    begin
+        if (rising_edge(CLK)) then
+            -- bílé body v rozích obrazovky
+            if ((pix_x = 0 AND pix_y = 0) OR (pix_x = 0 AND pix_y = 478) OR
+            (pix_x = 638 AND pix_y = 0) OR (pix_x = 639 AND pix_y = 479)) then
+                white_point_is_reg <= '1';
+            else
+                white_point_is_reg <= '0';
+            end if;
+        end if;
+    end process;
+
+    water_is <= (load_water_on and GAME_ON) or -- voda nacitani
+                (roura_water_h and sq_cell_on and GAME_ON and not sig_komp_on) or  -- voda roura nevertikalni
+                (roura_water_v and sq_cell_on and GAME_ON and not sig_komp_on); -- voda roura vertikalni
+
+    with sig_typ_roury2 select
+    game_field_text <= '1' when "0000",
+                       '1' when "1001",
+                       '1' when "1101",
+                       '1' when "1110",
+                       '1' when "1111",
+                       '0' when others;
+
+    wall_is <= '1' when (sig_typ_roury2 = "1100") else '0';
+
+    kurzor_is <= sig_kurzor and not sig_komp_on;
+
+    process (CLK)
+    begin
+        if rising_edge(CLK) then
+            sq_cell_on_reg      <= sq_cell_on;
+            rom_bit_reg         <= rom_bit;
+            water_is_reg        <= water_is;
+            game_field_text_reg <= game_field_text;
+            komp4_is_reg        <= KOMP4_IS;
+            wall_is_reg         <= wall_is;
+            kurzor_is_reg       <= kurzor_is;
+        end if;
+    end process;
+
     -- Nastaveni zobrazovane barvy
     rbg_reg : process (CLK)
     begin
         if (rising_edge(CLK)) then
-            if ((pix_x = 0 AND pix_y = 0) OR (pix_x = 0 AND pix_y = 478) OR
-                (pix_x = 638 AND pix_y = 0) OR (pix_x = 639 AND pix_y = 479)) then
+            if (white_point_is_reg = '1') then -- bílé body v rozích obrazovky
                 RGB <= "111";
-            elsif (load_water_on = '1' AND GAME_ON = '1') then
-                RGB <= "011"; -- voda nacitani
-            elsif (roura_water_h = '1' AND sq_cell_on = '1' AND
-                   GAME_ON = '1' AND sig_komp_on = '0') then
-                RGB <= "011"; -- voda roura nevertikalni
-            elsif (roura_water_v = '1' AND sq_cell_on = '1' AND
-                   GAME_ON = '1' AND sig_komp_on = '0') then
-                RGB <= "011"; -- voda roura vertikalni
-            elsif (sq_cell_on = '1' AND rom_bit = '1') then
-                if (sig_kurzor = '1' AND sig_komp_on = '0') then
+            elsif (water_is_reg = '1') then -- vykreslování vody
+                RGB <= "011";
+            elsif (sq_cell_on_reg = '1' AND rom_bit_reg = '1') then
+                if (kurzor_is_reg = '1') then -- kurzor
                     RGB <= "101";
-                elsif (sig_typ_roury2 = "0000" OR sig_typ_roury2 = "1001" OR
-                       sig_typ_roury2 = "1101" OR sig_typ_roury2 = "1110" OR
-                       sig_typ_roury2 = "1111") then
+                elsif (game_field_text_reg = '1') then -- herni pole a text
                     RGB <= "111";
-                elsif (sig_typ_roury2 = "1100") then
+                elsif (wall_is_reg = '1') then -- zed
                     RGB <= "100";
-                else
+                elsif (komp4_is_reg = '1') then -- roura k vložení
+                    RGB <= "010";
+                else -- jiné roury
                     RGB <= "001";
                 end if;
-            else
+            else -- černé pozadí
                 RGB <= "000";
             end if;
         end if;

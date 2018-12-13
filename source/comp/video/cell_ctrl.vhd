@@ -23,6 +23,7 @@ entity CELL_CTRL is
         KOMP_SET_X  : out std_logic;
         KOMP_SET_Y  : out std_logic;
         KOMP_ON     : out std_logic;
+        KOMP4_IS    : out std_logic;
         ADDR        : out std_logic_vector(7 downto 0);
         KOMP0       : in  std_logic_vector(5 downto 0);
         KOMP1       : in  std_logic_vector(5 downto 0);
@@ -386,6 +387,7 @@ begin
                 KOMP4 when "010",
                 "000000" when others;
 
+    -- aktivní, když se vykreslují roury mimo herní plochu
     with rom_data(2 downto 0) select
     sig_komp_on <= '1' when "100",
                    '1' when "101",
@@ -396,5 +398,6 @@ begin
                    '0' when others;
 
     KOMP_ON <= sig_komp_on;
+    KOMP4_IS <= '1' when (rom_data(2 downto 0) = "010") else '0';
 
 end FULL;

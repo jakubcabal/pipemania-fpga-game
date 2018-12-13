@@ -61,6 +61,7 @@ architecture FULL of TOP is
     signal sig_komp_set_x       : std_logic;
     signal sig_komp_set_y       : std_logic;
     signal sig_komp_on          : std_logic;
+    signal sig_komp4_is         : std_logic;
     signal sig_komp_out         : std_logic_vector(5 downto 0);
 
     -- video signals
@@ -72,8 +73,9 @@ architecture FULL of TOP is
     signal sig_vsync2           : std_logic;
     signal sig_hsync3           : std_logic;
     signal sig_vsync3           : std_logic;
+    signal sig_hsync4           : std_logic;
+    signal sig_vsync4           : std_logic;
     signal sig_rgb              : std_logic_vector(2 downto 0);
-    signal sig_rgb2             : std_logic_vector(2 downto 0);
 
     -- memory signals
     signal sig_addr_cell_ctrl   : std_logic_vector(7 downto 0);
@@ -142,8 +144,8 @@ begin
     VGA_GREEN <= sig_rgb(1) & sig_rgb(1) & sig_rgb(1);
     VGA_BLUE  <= sig_rgb(0) & sig_rgb(0);
 
-    VGA_V_SYNC <= sig_vsync3;
-    VGA_H_SYNC <= sig_hsync3;
+    VGA_V_SYNC <= sig_vsync4;
+    VGA_H_SYNC <= sig_hsync4;
 
     ----------------------------------------------------------------------------
     -- RESET DEBOUNCER AND SYNCHRONIZER
@@ -208,6 +210,7 @@ begin
         KOMP_SET_X  => sig_komp_set_x,
         KOMP_SET_Y  => sig_komp_set_y,
         KOMP_ON     => sig_komp_on,
+        KOMP4_IS    => sig_komp4_is,
         ADDR        => sig_addr_cell_ctrl,
         KOMP0       => sig_komp0,
         KOMP1       => sig_komp1,
@@ -238,6 +241,7 @@ begin
         KOMP_SET_X     => sig_komp_set_x,
         KOMP_SET_Y     => sig_komp_set_y,
         KOMP_ON        => sig_komp_on,
+        KOMP4_IS       => sig_komp4_is,
         KOMP_IN        => sig_komp_out,
         GAME_ON        => sig_game_on,
         LOAD_WATER     => sig_load_water,
@@ -251,10 +255,12 @@ begin
             sig_hsync1 <= sig_hsync;
             sig_hsync2 <= sig_hsync1;
             sig_hsync3 <= sig_hsync2;
+            sig_hsync4 <= sig_hsync3;
 
             sig_vsync1 <= sig_vsync;
             sig_vsync2 <= sig_vsync1;
             sig_vsync3 <= sig_vsync2;
+            sig_vsync4 <= sig_vsync3;
 
             pix_x1 <= pix_x;
             pix_x2 <= pix_x1;

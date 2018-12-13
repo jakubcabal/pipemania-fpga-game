@@ -71,19 +71,8 @@ begin
     ACK_A <= sig_ack_a;
     ACK_B <= sig_ack_b;
 
-    dout_mux_p : process (last_ack_a, last_ack_b, DOUT)
-    begin
-        if (last_ack_a = '1') then
-            DOUT_A <= DOUT;
-            DOUT_B <= (others => '0');
-        elsif (last_ack_b = '1') then
-            DOUT_A <= (others => '0');
-            DOUT_B <= DOUT;
-        else
-            DOUT_A <= (others => '0');
-            DOUT_B <= (others => '0');
-        end if;
-    end process;
+    DOUT_A <= DOUT;
+    DOUT_B <= DOUT;
 
     ack_reg : process (CLK, RST)
     begin
