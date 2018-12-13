@@ -2,7 +2,7 @@
 -- PROJECT: PIPE MANIA - GAME FOR FPGA
 --------------------------------------------------------------------------------
 -- NAME:    CELL_GENERATOR
--- AUTHORS: Jakub Cabal    <xcabal05@stud.feec.vutbr.cz>
+-- AUTHORS: Jakub Cabal    <jakubcabal@gmail.com>
 --          Ondřej Dujiček <xdujic02@stud.feec.vutbr.cz>
 -- LICENSE: The MIT License, please read LICENSE file
 -- WEBSITE: https://github.com/jakubcabal/pipemania-fpga-game
@@ -39,6 +39,65 @@ end KURZOR_CTRL;
 
 architecture FULL of KURZOR_CTRL is
 
+    type rom_t is array (15 downto 0) of std_logic_vector(15 downto 0);
+
+    constant LEVEL2_MAP : rom_t := (
+        "1111111111111111",
+        "1111111111111111",
+        "1111111111111111",
+        "1100001000000000",
+        "1100001000000000",
+        "1100001000000000",
+        "1100001000000000",
+        "1100001000000000",
+        "1100001000010000",
+        "1100001000010000",
+        "1100001000010000",
+        "1100000000010000",
+        "1100000000010000",
+        "1100000000010000",
+        "1100000000010000",
+        "1100000000010000"
+    );
+
+    constant LEVEL3_MAP : rom_t := (
+        "1111111111111111",
+        "1111111111111111",
+        "1111111111111111",
+        "1100000100000000",
+        "1100000100000000",
+        "1100000100000000",
+        "1111000100111000",
+        "1100000100100000",
+        "1100000100100000",
+        "1100000100100000",
+        "1100000100100000",
+        "1100000100100000",
+        "1100011100100011",
+        "1100000000100000",
+        "1100000000100000",
+        "1100000000100000"
+    );
+
+    constant LEVEL4_MAP : rom_t := (
+        "1111111111111111",
+        "1111111111111111",
+        "1111111111111111",
+        "1100000100000000",
+        "1100100100111100",
+        "1100100100000000",
+        "1100000100100111",
+        "1100000100100000",
+        "1100100100100000",
+        "1100100100100100",
+        "1100000100100100",
+        "1100000100100000",
+        "1111100100100000",
+        "1100000000100100",
+        "1100111100100100",
+        "1100000000100000"
+    );
+
     signal sig_kurzor_addr   : std_logic_vector(7 downto 0);
     signal kurzor_x          : unsigned(3 downto 0);
     signal kurzor_y          : unsigned(3 downto 0);
@@ -47,17 +106,21 @@ architecture FULL of KURZOR_CTRL is
     signal reset_en          : std_logic;
 
     signal gen_addr          : unsigned(7 downto 0);
-    signal gen_addr_next     : unsigned(7 downto 0);
     signal gen_en            : std_logic;
     signal gen_ok            : std_logic;
 
-    signal lvl2_en           : std_logic;
+    signal lvl_gen           : std_logic;
+
+    signal lvl2_row          : std_logic_vector(15 downto 0);
+    signal lvl2_wall         : std_logic;
     signal lvl2_komp         : std_logic_vector(1 downto 0);
 
-    signal lvl3_en           : std_logic;
+    signal lvl3_row          : std_logic_vector(15 downto 0);
+    signal lvl3_wall         : std_logic;
     signal lvl3_komp         : std_logic_vector(1 downto 0);
 
-    signal lvl4_en           : std_logic;
+    signal lvl4_row          : std_logic_vector(15 downto 0);
+    signal lvl4_wall         : std_logic;
     signal lvl4_komp         : std_logic_vector(1 downto 0);
 
     type state is (wait_on_key, read_cell_data, data_check, pipe_insert,
@@ -73,16 +136,10 @@ begin
     -- RIZENI KURZORU
     ----------------------------------------------------------------------------
 
-    process (CLK, RST)
+    process (CLK)
     begin
-        if (RST = '1') then
-            kurzor_x <= "0000";
-            kurzor_y <= "0000";
-        elsif (rising_edge(CLK)) then
-            if (GAME_ON = '0') then
-                kurzor_x <= "0000";
-                kurzor_y <= "0000";
-            else
+        if (rising_edge(CLK)) then
+            if (GAME_ON = '1') then
                 if (KEY_W = '1' AND kurzor_y > 0) then
                     kurzor_y <= kurzor_y - 1;
                 elsif (KEY_S = '1' AND kurzor_y < 12) then
@@ -92,6 +149,9 @@ begin
                 elsif (KEY_D = '1' AND kurzor_x < 13) then
                     kurzor_x <= kurzor_x + 1;
                 end if;
+            else
+                kurzor_x <= "0000";
+                kurzor_y <= "0000";
             end if;
         end if;
     end process;
@@ -217,13 +277,11 @@ begin
             when wait_on_key =>
                 EN       <= '0';
                 WE       <= '0';
-                ADDR     <= (others=>'0');
+                ADDR     <= sig_kurzor_addr;
                 DATAOUT  <= (others=>'0');
                 KOMP_GEN <= '0';
                 reset_en <= '0';
-                lvl2_en  <= '0';
-                lvl3_en  <= '0';
-                lvl4_en  <= '0';
+                lvl_gen  <= '0';
                 CANT_PLACE <= '0';
                 CAN_PLACE  <= '0';
 
@@ -231,25 +289,21 @@ begin
                 EN       <= '1';
                 WE       <= '0';
                 ADDR     <= sig_kurzor_addr;
-                DATAOUT  <=  (others=>'0');
+                DATAOUT  <= (others=>'0');
                 KOMP_GEN <= '0';
                 reset_en <= '0';
-                lvl2_en  <= '0';
-                lvl3_en  <= '0';
-                lvl4_en  <= '0';
+                lvl_gen  <= '0';
                 CANT_PLACE <= '0';
                 CAN_PLACE  <= '0';
 
             when data_check =>
                 EN       <= '0';
                 WE       <= '0';
-                ADDR     <= (others=>'0');
+                ADDR     <= sig_kurzor_addr;
                 DATAOUT  <= (others=>'0');
                 KOMP_GEN <= '0';
                 reset_en <= '0';
-                lvl2_en  <= '0';
-                lvl3_en  <= '0';
-                lvl4_en  <= '0';
+                lvl_gen  <= '0';
                 CAN_PLACE  <= '0';
                 if (DATAIN(3 downto 0) = "0000") then
                     CANT_PLACE <= '0';
@@ -264,9 +318,7 @@ begin
                 DATAOUT  <= zeros_22 & uprdownl & KOMP4;
                 KOMP_GEN <= '1';
                 reset_en <= '0';
-                lvl2_en  <= '0';
-                lvl3_en  <= '0';
-                lvl4_en  <= '0';
+                lvl_gen  <= '0';
                 CANT_PLACE <= '0';
                 CAN_PLACE  <= '1';
 
@@ -277,9 +329,7 @@ begin
                 DATAOUT  <= (others=>'0');
                 KOMP_GEN <= '0';
                 reset_en <= '1';
-                lvl2_en  <= '0';
-                lvl3_en  <= '0';
-                lvl4_en  <= '0';
+                lvl_gen  <= '0';
                 CANT_PLACE <= '0';
                 CAN_PLACE  <= '0';
 
@@ -290,9 +340,7 @@ begin
                 DATAOUT  <= "0000000000000000000000000000" & lvl2_komp & "00";
                 KOMP_GEN <= '0';
                 reset_en <= '0';
-                lvl2_en  <= '1';
-                lvl3_en  <= '0';
-                lvl4_en  <= '0';
+                lvl_gen  <= '1';
                 CANT_PLACE <= '0';
                 CAN_PLACE  <= '0';
 
@@ -303,9 +351,7 @@ begin
                 DATAOUT  <= "0000000000000000000000000000" & lvl3_komp & "00";
                 KOMP_GEN <= '0';
                 reset_en <= '0';
-                lvl2_en  <= '0';
-                lvl3_en  <= '1';
-                lvl4_en  <= '0';
+                lvl_gen  <= '1';
                 CANT_PLACE <= '0';
                 CAN_PLACE  <= '0';
 
@@ -316,22 +362,18 @@ begin
                 DATAOUT  <= "0000000000000000000000000000" & lvl4_komp & "00";
                 KOMP_GEN <= '0';
                 reset_en <= '0';
-                lvl2_en  <= '0';
-                lvl3_en  <= '0';
-                lvl4_en  <= '1';
+                lvl_gen  <= '1';
                 CANT_PLACE <= '0';
                 CAN_PLACE  <= '0';
 
             when others =>
                 EN      <= '0';
                 WE      <= '0';
-                ADDR    <= (others=>'0');
+                ADDR    <= sig_kurzor_addr;
                 DATAOUT <= (others=>'0');
                 KOMP_GEN <= '0';
                 reset_en <= '0';
-                lvl2_en <= '0';
-                lvl3_en  <= '0';
-                lvl4_en  <= '0';
+                lvl_gen  <= '0';
                 CANT_PLACE <= '0';
                 CAN_PLACE  <= '0';
 
@@ -353,123 +395,43 @@ begin
     -- GENERATE ADDRESS COUNTER AND OK FLAG
     ----------------------------------------------------------------------------
 
-    gen_en <= lvl2_en or lvl3_en or lvl4_en or reset_en;
+    gen_en <= lvl_gen or reset_en;
 
-    process (CLK, RST)
+    process (CLK)
     begin
-        if (RST = '1') then
-            gen_addr_next <= (others=>'0');
-            gen_addr      <= (others=>'0');
-        elsif rising_edge(CLK) then
+        if rising_edge(CLK) then
             if (gen_en = '1') then
-                gen_addr_next <= gen_addr + 1;
-                gen_addr      <= gen_addr_next;
-            end if;
-        end if;
-    end process;
-
-    process (CLK, RST)
-    begin
-        if (RST = '1') then
-            gen_ok <= '0';
-        elsif rising_edge(CLK) then
-            if (gen_addr_next = "11111111") then
-                gen_ok <= '1';
+                gen_addr <= gen_addr + 1;
             else
-                gen_ok <= '0';
+                gen_addr <= (others=>'0');
             end if;
         end if;
     end process;
 
-    ----------------------------------------------------------------------------
-    -- LEVEL 2 GENERATE
-    ----------------------------------------------------------------------------
-
-    process (CLK, RST)
-    begin
-        if (RST = '1') then
-            lvl2_komp <= (others=>'0');
-        elsif rising_edge(CLK) then
-            if(lvl2_en = '1') then
-                if (gen_addr(3 downto 0) = "0100" AND
-                    gen_addr(7 downto 4) >= "0000" AND
-                    gen_addr(7 downto 4) <= "0111")
-                then
-                    lvl2_komp <= "11";
-                elsif (gen_addr(3 downto 0) = "1001" AND
-                       gen_addr(7 downto 4) >= "0101" AND
-                       gen_addr(7 downto 4) <= "1100")
-                then
-                    lvl2_komp <= "11";
-                else
-                    lvl2_komp <= "00";
-                end if;
-            end if;
-        end if;
-    end process;
+    gen_ok <= '1' when (gen_addr = "11111111") else '0';
 
     ----------------------------------------------------------------------------
-    -- LEVEL 3 GENERATE
+    -- LEVEL 2 ROM
     ----------------------------------------------------------------------------
 
-    process (CLK, RST)
-    begin
-        if (RST = '1') then
-            lvl3_komp <= (others=>'0');
-        elsif rising_edge(CLK) then
-            if(lvl3_en = '1') then
-                if (gen_addr(3 downto 0) = "0100" AND
-                    gen_addr(7 downto 4) >= "0000" AND
-                    gen_addr(7 downto 4) <= "0111")
-                then
-                    lvl3_komp <= "11";
-                elsif (gen_addr(3 downto 0) = "1000" AND
-                       gen_addr(7 downto 4) >= "0110" AND
-                       gen_addr(7 downto 4) <= "1101")
-                then
-                    lvl3_komp <= "11";
-                else
-                    lvl3_komp <= "00";
-                end if;
-            end if;
-        end if;
-    end process;
+    lvl2_row  <= LEVEL2_MAP(to_integer(gen_addr(7 downto 4)));
+    lvl2_wall <= lvl2_row(to_integer(gen_addr(3 downto 0)));
+    lvl2_komp <= "11" when (lvl2_wall = '1') else "00";
 
     ----------------------------------------------------------------------------
-    -- LEVEL 4 GENERATE
+    -- LEVEL 3 ROM
     ----------------------------------------------------------------------------
 
-    process (CLK, RST)
-    begin
-        if (RST = '1') then
-            lvl4_komp <= (others=>'0');
-        elsif rising_edge(CLK) then
-            if(lvl4_en = '1') then
-                if (gen_addr(3 downto 0) = "0100" AND
-                    gen_addr(7 downto 4) >= "0000" AND
-                    gen_addr(7 downto 4) <= "0110")
-                then
-                    lvl4_komp <= "11";
-                elsif (gen_addr(3 downto 0) = "1001" AND
-                       gen_addr(7 downto 4) >= "0110" AND
-                       gen_addr(7 downto 4) <= "1100")
-                then
-                    lvl4_komp <= "11";
-                elsif (gen_addr(3 downto 0) = "1000" AND
-                       gen_addr(7 downto 4) >= "0001" AND
-                       gen_addr(7 downto 4) <= "0110")
-                then
-                    lvl4_komp <= "11";
-                elsif (gen_addr(3 downto 0) = "0100" AND
-                       gen_addr(7 downto 4) >= "0111" AND
-                       gen_addr(7 downto 4) <= "1100")
-                then
-                    lvl4_komp <= "11";
-                else
-                    lvl4_komp <= "00";
-                end if;
-            end if;
-        end if;
-    end process;
+    lvl3_row  <= LEVEL3_MAP(to_integer(gen_addr(7 downto 4)));
+    lvl3_wall <= lvl3_row(to_integer(gen_addr(3 downto 0)));
+    lvl3_komp <= "11" when (lvl3_wall = '1') else "00";
+
+    ----------------------------------------------------------------------------
+    -- LEVEL 4 ROM
+    ----------------------------------------------------------------------------
+
+    lvl4_row  <= LEVEL4_MAP(to_integer(gen_addr(7 downto 4)));
+    lvl4_wall <= lvl4_row(to_integer(gen_addr(3 downto 0)));
+    lvl4_komp <= "11" when (lvl4_wall = '1') else "00";
 
 end FULL;
