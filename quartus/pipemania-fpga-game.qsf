@@ -1,0 +1,58 @@
+#-------------------------------------------------------------------------------
+# PROJECT: PIPE MANIA - GAME FOR FPGA
+#-------------------------------------------------------------------------------
+# NAME:    QUARTUS SETTINGS FILE FOR EP4CE6 STARTER BOARD
+# AUTHORS: Jakub Cabal <jakubcabal@gmail.com>
+# LICENSE: The MIT License, please read LICENSE file
+# WEBSITE: https://github.com/jakubcabal/pipemania-fpga-game
+#-------------------------------------------------------------------------------
+
+set_global_assignment -name FAMILY "Cyclone IV E"
+set_global_assignment -name DEVICE EP4CE6E22C8
+set_global_assignment -name TOP_LEVEL_ENTITY TOP
+
+# PROJECT VHDL FILES
+set_global_assignment -name VHDL_FILE ../source/top.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/video/vga_sync.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/video/cell_generator.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/video/cell_ctrl.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/sound/muzika.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/memory/mem_hub.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/memory/bram_sync_tdp.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/memory/bram_rom_screen.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/memory/bram_rom_cell.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/game/wtr_ctrl.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/game/wtr_clk.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/game/random_decoder_fifo.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/game/random.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/game/kurzor_ctrl.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/game/game_ctrl.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/control/ps2_rx.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/control/ps2.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/control/kb_code.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/base/rising_edge_detector.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/base/reset_sync.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/base/falling_edge_detector.vhd
+set_global_assignment -name VHDL_FILE ../source/comp/base/debouncer.vhd
+
+# TIMING CONSTRAINTS
+set_global_assignment -name SDC_FILE ../source/timing_constraints.sdc
+
+# FPGA PINS ASSIGNMENT FOR EP4CE6 STARTER BOARD
+set_location_assignment PIN_91  -to CLK
+set_location_assignment PIN_25  -to ASYNC_RST
+set_location_assignment PIN_88  -to PS2_CLK
+set_location_assignment PIN_119 -to PS2_DATA
+set_location_assignment PIN_120 -to VGA_RED[0]
+set_location_assignment PIN_121 -to VGA_RED[1]
+set_location_assignment PIN_124 -to VGA_RED[2]
+set_location_assignment PIN_125 -to VGA_GREEN[0]
+set_location_assignment PIN_126 -to VGA_GREEN[1]
+set_location_assignment PIN_127 -to VGA_GREEN[2]
+set_location_assignment PIN_128 -to VGA_BLUE[0]
+set_location_assignment PIN_129 -to VGA_BLUE[1]
+set_location_assignment PIN_132 -to VGA_V_SYNC
+set_location_assignment PIN_133 -to VGA_H_SYNC
+set_location_assignment PIN_7   -to LED_GWIN
+set_location_assignment PIN_3   -to LED_GOVER
+set_location_assignment PIN_106 -to SOUND
