@@ -24,10 +24,6 @@ entity CELL_GENERATOR is
         KURZOR         : in  std_logic;
         PIXEL_X2       : in  std_logic_vector(9 downto 0);
         PIXEL_Y2       : in  std_logic_vector(9 downto 0);
-        PIXEL_SET_X    : in  std_logic;
-        PIXEL_SET_Y    : in  std_logic;
-        KOMP_SET_X     : in  std_logic;
-        KOMP_SET_Y     : in  std_logic;
         KOMP_ON        : in  std_logic;
         KOMP4_IS       : in  std_logic;
         KOMP_IN        : in  std_logic_vector(5 downto 0);
@@ -69,15 +65,15 @@ architecture FULL of CELL_GENERATOR is
 
     signal roura_water_h        : std_logic;
     signal roura_water_v        : std_logic;
-    signal roura_water_lenght_1 : unsigned(9 downto 0);
-    signal roura_water_lenght_2 : unsigned(9 downto 0);
-    signal roura_water_lenght_h : unsigned(9 downto 0);
-    signal roura_water_lenght_v : unsigned(9 downto 0);
-    signal mini_water_lenght    : unsigned(9 downto 0);
-    signal first_water_lenght   : unsigned(9 downto 0);
-    signal last_water_lenght    : unsigned(9 downto 0);
-    signal roura_water_h_offset : unsigned(9 downto 0);
-    signal roura_water_v_offset : unsigned(9 downto 0);
+    signal roura_water_lenght_1 : unsigned(4 downto 0);
+    signal roura_water_lenght_2 : unsigned(4 downto 0);
+    signal roura_water_lenght_h : unsigned(4 downto 0);
+    signal roura_water_lenght_v : unsigned(4 downto 0);
+    signal mini_water_lenght    : unsigned(4 downto 0);
+    signal first_water_lenght   : unsigned(4 downto 0);
+    signal last_water_lenght    : unsigned(4 downto 0);
+    signal roura_water_h_offset : unsigned(4 downto 0);
+    signal roura_water_v_offset : unsigned(4 downto 0);
 
     signal white_point_is_reg  : std_logic;
 
@@ -93,6 +89,10 @@ architecture FULL of CELL_GENERATOR is
     signal sq_cell_on_reg      : std_logic;
     signal rom_bit_reg         : std_logic;
     signal komp4_is_reg        : std_logic;
+
+    signal game_field_rendering_x : std_logic;
+    signal game_field_rendering_y : std_logic;
+    signal game_field_rendering   : std_logic;
 
 begin
 
@@ -112,64 +112,28 @@ begin
         end if;
     end process;
 
-    -- Nastaveni X souradnic pro okraje
-    process (CLK, RST)
-    begin
-        if (RST = '1') then
-            cell_x_l <= (others => '0');
-            cell_x_r <= (others => '0');
-        elsif (rising_edge(CLK)) then
-            if (PIXEL_SET_X = '1' AND GAME_ON = '1') then
-                cell_x_l <= pix_x;
-                cell_x_r <= pix_x + 31;
-            elsif (KOMP_SET_X = '1' AND KOMP_ON = '1') then
-                cell_x_l <= pix_x;
-                cell_x_r <= pix_x + 31;
-            end if;
-        end if;
-    end process;
-
-    -- Nastaveni Y souradnic pro okraje
-    process (CLK, RST)
-    begin
-        if (RST = '1') then
-            cell_y_t <= (others => '0');
-            cell_y_b <= (others => '0');
-        elsif (rising_edge(CLK)) then
-            if (PIXEL_SET_Y = '1' AND GAME_ON = '1') then
-                cell_y_t <= pix_y;
-                cell_y_b <= pix_y + 31;
-            elsif (KOMP_SET_Y = '1' AND KOMP_ON = '1') then
-                cell_y_t <= pix_y;
-                cell_y_b <= pix_y + 31;
-            end if;
-        end if;
-    end process;
-
     -- volba natoceni roury
-    sig_natoceni_roury <= sig_komp_in(5 downto 4) when (KOMP_ON = '1')
-                                                  else NATOCENI_ROURY;
+    sig_natoceni_roury <= sig_komp_in(5 downto 4) when (KOMP_ON = '1') else NATOCENI_ROURY;
 
     -- volba typu roury
-    sig_typ_roury <= sig_komp_in(3 downto 0) when (KOMP_ON = '1')
-                                             else TYP_ROURY;
+    sig_typ_roury <= sig_komp_in(3 downto 0) when (KOMP_ON = '1') else TYP_ROURY;
 
     -- Pripraveni souradnic obrazku, rorace obrazku
-    pipe_rotate : process (sig_natoceni_roury, pix_x, pix_y, cell_y_t, cell_x_l)
+    pipe_rotate : process (sig_natoceni_roury, pix_x, pix_y)
     begin
         case sig_natoceni_roury is
             when "00" => -- zahnuta zleva dolu 00
-                img_row <= pix_y(4 downto 0) - cell_y_t(4 downto 0);
-                img_col <= 31 - (pix_x(4 downto 0) - cell_x_l(4 downto 0));
+                img_row <= pix_y(4 downto 0);
+                img_col <= 31 - pix_x(4 downto 0);
             when "01" => -- zahnuta zleva nahoru 01
-                img_col <= 31 - (pix_y(4 downto 0) - cell_y_t(4 downto 0));
-                img_row <= 31 - (pix_x(4 downto 0) - cell_x_l(4 downto 0));
+                img_col <= 31 - pix_y(4 downto 0);
+                img_row <= 31 - pix_x(4 downto 0);
             when "10" => -- zahnuta zprava nahoru 10
-                img_row <= 31 - (pix_y(4 downto 0) - cell_y_t(4 downto 0));
-                img_col <= pix_x(4 downto 0) - cell_x_l(4 downto 0);
+                img_row <= 31 - pix_y(4 downto 0);
+                img_col <= pix_x(4 downto 0);
             when others => -- zahnuta zprava dolu 11
-                img_row <= pix_y(4 downto 0) - cell_y_t(4 downto 0);
-                img_col <= pix_x(4 downto 0) - cell_x_l(4 downto 0);
+                img_row <= pix_y(4 downto 0);
+                img_col <= pix_x(4 downto 0);
         end case;
     end process;
 
@@ -186,10 +150,23 @@ begin
     -- Vyber konkretniho bitu ve vyctenem radku obrazku
     rom_bit <= rom_data(to_integer(img_col));
 
-    -- Rika nam ze vykreslujeme pixeli, ktere se nachazi v policku
-    sq_cell_on <= '1' when ((cell_x_l <= pix_x) and (pix_x <= cell_x_r) and
-                            (cell_y_t <= pix_y) and (pix_y <= cell_y_b))
-                      else '0';
+    process (pix_x, pix_y)
+    begin
+        game_field_rendering_x <= '0';
+        game_field_rendering_y <= '0';
+        for i in 3 to 16 loop
+            if (pix_x(9 downto 5) = i) then
+                game_field_rendering_x <= '1';
+            end if;
+        end loop;
+        for i in 1 to 13 loop
+            if (pix_y(9 downto 5) = i) then
+                game_field_rendering_y <= '1';
+            end if;
+        end loop;
+    end process;
+
+    game_field_rendering <= game_field_rendering_x and game_field_rendering_y and GAME_ON;
 
     ----------------------------------------------------------------------------
     -- ZOBRAZOVANI VODY V BOCNI ODPOCITAVACI TRUBCE
@@ -208,33 +185,33 @@ begin
     ----------------------------------------------------------------------------
 
     -- zleva doprava
-    roura_water_lr <= '1' when (((cell_x_l + roura_water_h_offset) <= pix_x) and
-                                (pix_x <= (cell_x_l + roura_water_h_offset + roura_water_lenght_h)) and
-                                ((cell_y_t + 14) <= pix_y) and (pix_y <= (cell_y_t + 17)))
+    roura_water_lr <= '1' when ((roura_water_h_offset <= pix_x(4 downto 0)) and
+                                (pix_x(4 downto 0) <= (roura_water_h_offset + roura_water_lenght_h)) and
+                                (14 <= pix_y(4 downto 0) and pix_y(4 downto 0) <= 17))
                           else '0';
 
     -- zprava doleva
-    roura_water_rl <= '1' when ((((cell_x_r - roura_water_h_offset) - roura_water_lenght_h) <= pix_x) and
-                                (pix_x <= (cell_x_r - roura_water_h_offset)) and
-                                ((cell_y_t + 14) <= pix_y) and (pix_y <= (cell_y_t + 17)))
+    roura_water_rl <= '1' when (((31 - roura_water_h_offset - roura_water_lenght_h) <= pix_x(4 downto 0)) and
+                                (pix_x(4 downto 0) <= (31 - roura_water_h_offset)) and
+                                (14 <= pix_y(4 downto 0)) and (pix_y(4 downto 0) <= 17))
                           else '0';
 
     -- zdola nahoru
-    roura_water_bt <= '1' when (((cell_x_l + 14) <= pix_x) and (pix_x <= (cell_x_l + 17)) and
-                                (((cell_y_b - roura_water_v_offset) - roura_water_lenght_v) <= pix_y) and
-                                (pix_y <= (cell_y_b - roura_water_v_offset)))
+    roura_water_bt <= '1' when ((14 <= pix_x(4 downto 0)) and (pix_x(4 downto 0) <= 17) and
+                                ((31 - roura_water_v_offset - roura_water_lenght_v) <= pix_y(4 downto 0)) and
+                                (pix_y(4 downto 0) <= (31 - roura_water_v_offset)))
                           else '0';
 
     -- zprava doleva
-    roura_water_tb <= '1' when (((cell_x_l + 14) <= pix_x) and (pix_x <= (cell_x_l + 17)) and
-                                ((cell_y_t + roura_water_v_offset) <= pix_y) and
-                                (pix_y <= (cell_y_t + roura_water_v_offset + roura_water_lenght_v)))
+    roura_water_tb <= '1' when ((14 <= pix_x(4 downto 0)) and (pix_x(4 downto 0) <= 17) and
+                                (roura_water_v_offset <= pix_y(4 downto 0)) and
+                                (pix_y(4 downto 0) <= (roura_water_v_offset + roura_water_lenght_v)))
                           else '0';
 
     process (ROURA_VODA1, mini_water_lenght)
     begin
       if (ROURA_VODA1(5) = '1') then
-          first_water_lenght <= "0000001111";
+          first_water_lenght <= "01111";
           last_water_lenght  <= mini_water_lenght;
       else
           first_water_lenght <= mini_water_lenght;
@@ -242,9 +219,9 @@ begin
       end if;
     end process;
 
-    roura_water_lenght_1 <= "00000" & (unsigned(ROURA_VODA1(5 downto 1)));
-    roura_water_lenght_2 <= "00000" & (unsigned(ROURA_VODA2(5 downto 1)));
-    mini_water_lenght    <= "000000" & (unsigned(ROURA_VODA1(4 downto 1)));
+    roura_water_lenght_1 <= unsigned(ROURA_VODA1(5 downto 1));
+    roura_water_lenght_2 <= unsigned(ROURA_VODA2(5 downto 1));
+    mini_water_lenght    <= '0' & (unsigned(ROURA_VODA1(4 downto 1)));
 
     process (ZDROJ_VODY1, sig_typ_roury2, ROURA_VODA1, roura_water_lr,
              roura_water_rl, roura_water_lenght_1, first_water_lenght,
@@ -253,31 +230,31 @@ begin
         if ((sig_typ_roury2 = "0001" OR sig_typ_roury2 = "0011") AND ROURA_VODA1(0) = '1' AND ZDROJ_VODY1 = "0001") then
             roura_water_h <= roura_water_lr;
             roura_water_lenght_h <= roura_water_lenght_1;
-            roura_water_h_offset <= to_unsigned(0, 10);
+            roura_water_h_offset <= to_unsigned(0, 5);
         elsif ((sig_typ_roury2 = "0001" OR sig_typ_roury2 = "0011") AND ROURA_VODA1(0) = '1' AND ZDROJ_VODY1 = "0010") then
             roura_water_h <= roura_water_rl;
             roura_water_lenght_h <= roura_water_lenght_1;
-            roura_water_h_offset <= to_unsigned(0, 10);
+            roura_water_h_offset <= to_unsigned(0, 5);
         elsif (sig_typ_roury2 = "0010" AND ROURA_VODA1(0) = '1' AND (ZDROJ_VODY1 = "0101" OR ZDROJ_VODY1 = "0110")) then
             roura_water_h <= roura_water_lr;
             roura_water_lenght_h <= first_water_lenght;
-            roura_water_h_offset <= to_unsigned(0, 10);
+            roura_water_h_offset <= to_unsigned(0, 5);
         elsif (sig_typ_roury2 = "0010" AND ROURA_VODA1(0) = '1' AND (ZDROJ_VODY1 = "0111" OR ZDROJ_VODY1 = "1000")) then
             roura_water_h <= roura_water_rl;
             roura_water_lenght_h <= first_water_lenght;
-            roura_water_h_offset <= to_unsigned(0, 10);
+            roura_water_h_offset <= to_unsigned(0, 5);
         elsif (sig_typ_roury2 = "0010" AND ROURA_VODA1(0) = '1' AND ROURA_VODA1(5) = '1' AND (ZDROJ_VODY1 = "1001" OR ZDROJ_VODY1 = "1011")) then
             roura_water_h <= roura_water_lr;
             roura_water_lenght_h <= last_water_lenght;
-            roura_water_h_offset <= to_unsigned(16, 10);
+            roura_water_h_offset <= to_unsigned(16, 5);
         elsif (sig_typ_roury2 = "0010" AND ROURA_VODA1(0) = '1' AND ROURA_VODA1(5) = '1' AND (ZDROJ_VODY1 = "1010" OR ZDROJ_VODY1 = "1100")) then
             roura_water_h <= roura_water_rl;
             roura_water_lenght_h <= last_water_lenght;
-            roura_water_h_offset <= to_unsigned(16, 10);
+            roura_water_h_offset <= to_unsigned(16, 5);
         else
             roura_water_h <= '0';
             roura_water_lenght_h <= roura_water_lenght_1;
-            roura_water_h_offset <= to_unsigned(0, 10);
+            roura_water_h_offset <= to_unsigned(0, 5);
         end if;
     end process;
 
@@ -288,31 +265,31 @@ begin
         if ((sig_typ_roury2 = "0001" OR sig_typ_roury2 = "0011") AND ROURA_VODA2(0) = '1' AND ZDROJ_VODY2 = "0011") then
             roura_water_v <= roura_water_bt;
             roura_water_lenght_v <= roura_water_lenght_2;
-            roura_water_v_offset <= to_unsigned(0, 10);
+            roura_water_v_offset <= to_unsigned(0, 5);
         elsif ((sig_typ_roury2 = "0001" OR sig_typ_roury2 = "0011") AND ROURA_VODA2(0) = '1' AND ZDROJ_VODY2 = "0100") then
             roura_water_v <= roura_water_tb;
             roura_water_lenght_v <= roura_water_lenght_2;
-            roura_water_v_offset <= to_unsigned(0, 10);
+            roura_water_v_offset <= to_unsigned(0, 5);
         elsif (sig_typ_roury2 = "0010" AND ROURA_VODA1(0) = '1' AND ROURA_VODA1(5) = '1' AND (ZDROJ_VODY1 = "0101" OR ZDROJ_VODY1 = "0111")) then
             roura_water_v <= roura_water_bt;
             roura_water_lenght_v <= last_water_lenght;
-            roura_water_v_offset <= to_unsigned(16, 10);
+            roura_water_v_offset <= to_unsigned(16, 5);
         elsif (sig_typ_roury2 = "0010" AND ROURA_VODA1(0) = '1' AND ROURA_VODA1(5) = '1' AND (ZDROJ_VODY1 = "0110" OR ZDROJ_VODY1 = "1000")) then
             roura_water_v <= roura_water_tb;
             roura_water_lenght_v <= last_water_lenght;
-            roura_water_v_offset <= to_unsigned(16, 10);
+            roura_water_v_offset <= to_unsigned(16, 5);
         elsif (sig_typ_roury2 = "0010" AND ROURA_VODA1(0) = '1' AND (ZDROJ_VODY1 = "1010" OR ZDROJ_VODY1 = "1001")) then
             roura_water_v <= roura_water_bt;
             roura_water_lenght_v <= first_water_lenght;
-            roura_water_v_offset <= to_unsigned(0, 10);
+            roura_water_v_offset <= to_unsigned(0, 5);
         elsif (sig_typ_roury2 = "0010" AND ROURA_VODA1(0) = '1' AND (ZDROJ_VODY1 = "1011" OR ZDROJ_VODY1 = "1100")) then
             roura_water_v <= roura_water_tb;
             roura_water_lenght_v <= first_water_lenght;
-            roura_water_v_offset <= to_unsigned(0, 10);
+            roura_water_v_offset <= to_unsigned(0, 5);
         else
             roura_water_v <= '0';
             roura_water_lenght_v <= roura_water_lenght_2;
-            roura_water_v_offset <= to_unsigned(0, 10);
+            roura_water_v_offset <= to_unsigned(0, 5);
         end if;
     end process;
 
@@ -334,8 +311,8 @@ begin
     end process;
 
     water_is <= (load_water_on and GAME_ON) or -- voda nacitani
-                (roura_water_h and sq_cell_on and GAME_ON and not sig_komp_on) or  -- voda roura nevertikalni
-                (roura_water_v and sq_cell_on and GAME_ON and not sig_komp_on); -- voda roura vertikalni
+                (roura_water_h and game_field_rendering) or  -- voda roura nevertikalni
+                (roura_water_v and game_field_rendering); -- voda roura vertikalni
 
     with sig_typ_roury2 select
     game_field_text <= '1' when "0000",
@@ -347,12 +324,12 @@ begin
 
     wall_is <= '1' when (sig_typ_roury2 = "1100") else '0';
 
-    kurzor_is <= sig_kurzor and not sig_komp_on;
+    kurzor_is <= sig_kurzor and game_field_rendering;
 
     process (CLK)
     begin
         if rising_edge(CLK) then
-            sq_cell_on_reg      <= sq_cell_on;
+            sq_cell_on_reg      <= game_field_rendering or sig_komp_on; --sq_cell_on;
             rom_bit_reg         <= rom_bit;
             water_is_reg        <= water_is;
             game_field_text_reg <= game_field_text;
@@ -370,10 +347,10 @@ begin
                 RGB <= "111";
             elsif (water_is_reg = '1') then -- vykreslování vody
                 RGB <= "011";
-            elsif (sq_cell_on_reg = '1' AND rom_bit_reg = '1') then
+            elsif (sq_cell_on_reg = '1' and rom_bit_reg = '1') then -- vykreslení obrazků z paměti
                 if (kurzor_is_reg = '1') then -- kurzor
                     RGB <= "101";
-                elsif (game_field_text_reg = '1') then -- herni pole a text
+                elsif (game_field_text_reg = '1') then -- herni mřížka a text
                     RGB <= "111";
                 elsif (wall_is_reg = '1') then -- zed
                     RGB <= "100";

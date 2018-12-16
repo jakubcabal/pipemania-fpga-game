@@ -56,10 +56,6 @@ architecture FULL of TOP is
     signal pix_y2               : std_logic_vector(9 downto 0);
 
     -- cell ctrl signals
-    signal sig_pix_set_x        : std_logic;
-    signal sig_pix_set_y        : std_logic;
-    signal sig_komp_set_x       : std_logic;
-    signal sig_komp_set_y       : std_logic;
     signal sig_komp_on          : std_logic;
     signal sig_komp4_is         : std_logic;
     signal sig_komp_out         : std_logic_vector(5 downto 0);
@@ -205,10 +201,6 @@ begin
         PIXEL_Y     => pix_y,
         KURZOR_ADDR => sig_kurzor_addr,
         KURZOR      => sig_kurzor,
-        PIXEL_SET_X => sig_pix_set_x,
-        PIXEL_SET_Y => sig_pix_set_y,
-        KOMP_SET_X  => sig_komp_set_x,
-        KOMP_SET_Y  => sig_komp_set_y,
         KOMP_ON     => sig_komp_on,
         KOMP4_IS    => sig_komp4_is,
         ADDR        => sig_addr_cell_ctrl,
@@ -236,10 +228,6 @@ begin
         KURZOR         => sig_kurzor,
         PIXEL_X2       => pix_x2,
         PIXEL_Y2       => pix_y2,
-        PIXEL_SET_X    => sig_pix_set_x,
-        PIXEL_SET_Y    => sig_pix_set_y,
-        KOMP_SET_X     => sig_komp_set_x,
-        KOMP_SET_Y     => sig_komp_set_y,
         KOMP_ON        => sig_komp_on,
         KOMP4_IS       => sig_komp4_is,
         KOMP_IN        => sig_komp_out,
